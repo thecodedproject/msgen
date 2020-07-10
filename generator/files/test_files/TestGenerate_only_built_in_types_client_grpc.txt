@@ -71,7 +71,7 @@ func (c *client) Ping(
 
 func (c *client) Pong(
 	ctx context.Context,
-) (int64, string, error) {
+) (resInt64Value int64, resStringValue string, err error) {
 
 	res, err := c.rpcClient.Pong(
 		ctx,
@@ -79,7 +79,7 @@ func (c *client) Pong(
 		},
 	)
 	if err != nil {
-		return int64{}, string{}, err
+		return resInt64Value, resStringValue, err
 	}
 
 	return res.int64Value, res.stringValue, nil

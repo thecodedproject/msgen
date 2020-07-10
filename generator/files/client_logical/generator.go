@@ -1,8 +1,8 @@
 package client_logical
 
 import(
-	"github.com/iancoleman/strcase"
 	"github.com/thecodedproject/msgen/generator/files"
+	"github.com/thecodedproject/msgen/generator/files/proto_helpers"
 	"github.com/thecodedproject/msgen/parser"
 	"io"
 )
@@ -10,7 +10,7 @@ import(
 type Method struct {
 	Name string
 	Args []parser.Field
-	ReturnTypes []string
+	ReturnArgs []parser.Field
 }
 
 func GenerateClient(
@@ -56,28 +56,26 @@ func GenerateBuffer(
 			return err
 		}
 
+		args, err := proto_helpers.MethodRequestFields(i, method.Name)
+		if err != nil {
+			return err
+		}
+
+		returnArgs, err := proto_helpers.MethodResponseFields(i, method.Name)
+		if err != nil {
+			return err
+		}
+
 		methodParams := Method{
 			Name: method.Name,
+			Args: args,
+			ReturnArgs: returnArgs,
 		}
 
-		for _, mess := range i.Messages {
-			if mess.Name == method.RequestMessage {
-				methodParams.Args = mess.Fields
-			} else if mess.Name == method.ResponseMessage {
-
-				for _, f := range mess.Fields {
-					methodParams.ReturnTypes = append(methodParams.ReturnTypes, f.Type)
-				}
-			}
-		}
-
-		for i := range methodParams.Args {
-			methodParams.Args[i].Name = strcase.ToLowerCamel(
-				methodParams.Args[i].Name,
-			)
-		}
-
-		methodParams.ReturnTypes = append(methodParams.ReturnTypes, "error")
+		methodParams.ReturnArgs = append(methodParams.ReturnArgs, parser.Field{
+			Name: "err",
+			Type: "error",
+		})
 
 		err = methodTemplate.Execute(writer, methodParams)
 		if err != nil {
@@ -115,15 +113,15 @@ func New(b ops.Backends) *client {
 var logicalMethodTmpl = `func (c *client) {{.Name}}(
 	ctx context.Context,
 {{- range .Args}}
-	{{.Name}} {{.Type}},
+	{{ToLowerCamel .Name}} {{.Type}},
 {{- end}}
-) {{FuncRetVals .ReturnTypes}} {
+) {{FuncRetVals .ReturnArgs}} {
 
 	return ops.{{.Name}}(
 		ctx,
 		c.backends,
 {{- range .Args}}
-		{{.Name}},
+		{{ToLowerCamel .Name}},
 {{- end}}
 	)
 }

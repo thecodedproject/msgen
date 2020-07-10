@@ -2,6 +2,7 @@ package files
 
 import(
 	"github.com/iancoleman/strcase"
+	"github.com/thecodedproject/msgen/parser"
 	"strings"
 	"text/template"
 )
@@ -9,31 +10,76 @@ import(
 func BaseTemplate() *template.Template {
 
 	return template.New("").Funcs(map[string]interface{}{
-		"FuncRetVals": genFunctionReturn,
-		"ToLower": strings.ToLower,
+		"FuncRetVals": funcReturnSignature(false, false),
+		"NamedFuncRetVals": funcReturnSignature(true, false),
+		"NamedFuncRetValsWithError": funcReturnSignature(true, true),
 
+		"FuncDefaultReturn_Named_WithError": funcDefaultReturnStatement(true, true),
+
+		"ToLower": strings.ToLower,
 		"ToCamel": strcase.ToCamel,
 		"ToLowerCamel": strcase.ToLowerCamel,
 	})
 }
 
-func genFunctionReturn(returnTypes []string) string {
+func funcReturnSignature(namedReturnVariables, addError bool) func([]parser.Field) string {
 
-	if len(returnTypes) == 1 {
-		return returnTypes[0]
-	}
+	return func(returnArgs []parser.Field) string {
 
-	returnStatement := "("
+		shouldBraceReturnSignature := len(returnArgs) > 1 || namedReturnVariables || addError
 
-	for i := range returnTypes {
-		returnStatement += returnTypes[i]
-
-		if i != len(returnTypes)-1 {
-			returnStatement += ", "
+		var retSignature string
+		if shouldBraceReturnSignature {
+			retSignature = "("
 		}
+
+		for i := range returnArgs {
+			if namedReturnVariables {
+				retSignature += strcase.ToLowerCamel("res_" + returnArgs[i].Name) + " " + returnArgs[i].Type
+			} else {
+				retSignature += returnArgs[i].Type
+			}
+
+			if i != len(returnArgs)-1 {
+				retSignature += ", "
+			}
+		}
+
+		if addError {
+			if namedReturnVariables {
+				retSignature += ", err error)"
+			} else {
+				retSignature += ", error)"
+			}
+		} else if shouldBraceReturnSignature {
+			retSignature += ")"
+		}
+
+		return retSignature
+	}
+}
+
+func funcDefaultReturnStatement(namedReturnVariables, addError bool) func([]parser.Field) string {
+
+	if !namedReturnVariables {
+		panic("Unamed funcDefaultReturnStatement not implemented")
 	}
 
-	returnStatement += ")"
+	return func(returnArgs []parser.Field) string {
 
-	return returnStatement
+		returnStatement := "return "
+
+		for i := range returnArgs {
+			returnStatement += strcase.ToLowerCamel("res_" + returnArgs[i].Name)
+			if i != len(returnArgs)-1 {
+				returnStatement += ", "
+			}
+		}
+
+		if addError {
+			returnStatement += ", err"
+		}
+
+		return returnStatement
+	}
 }

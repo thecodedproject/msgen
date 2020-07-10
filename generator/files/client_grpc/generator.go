@@ -1,8 +1,8 @@
 package client_grpc
 
 import(
-	"github.com/iancoleman/strcase"
 	"github.com/thecodedproject/msgen/generator/files"
+	"github.com/thecodedproject/msgen/generator/files/proto_helpers"
 	"github.com/thecodedproject/msgen/parser"
 	"io"
 )
@@ -10,7 +10,7 @@ import(
 type Method struct {
 	Name string
 	Args []parser.Field
-	ReturnTypes []string
+	ReturnArgs []parser.Field
 }
 
 func GenerateClient(
@@ -58,27 +58,23 @@ func GenerateBuffer(
 
 	for _, method := range i.Methods {
 
+		args, err := proto_helpers.MethodRequestFields(i, method.Name)
+		if err != nil {
+			return err
+		}
+
+		returnArgs, err := proto_helpers.MethodResponseFields(i, method.Name)
+		if err != nil {
+			return err
+		}
+
 		methodParams := Method{
 			Name: method.Name,
+			Args: args,
+			ReturnArgs: returnArgs,
 		}
 
-		for _, mess := range i.Messages {
-			if mess.Name == method.RequestMessage {
-				methodParams.Args = mess.Fields
-			} else if mess.Name == method.ResponseMessage {
-				for _, f := range mess.Fields {
-					methodParams.ReturnTypes = append(methodParams.ReturnTypes, f.Type)
-				}
-			}
-		}
-
-		for i := range methodParams.Args {
-			methodParams.Args[i].Name = strcase.ToLowerCamel(
-				methodParams.Args[i].Name,
-			)
-		}
-
-		if len(methodParams.ReturnTypes) == 0 {
+		if len(methodParams.ReturnArgs) == 0 {
 
 			methodEmptyReturnTemplate, err := baseTemplate.Parse(grpcMethodEmptyReturnTmpl)
 			if err != nil {
@@ -91,8 +87,6 @@ func GenerateBuffer(
 			}
 
 		} else {
-
-			methodParams.ReturnTypes = append(methodParams.ReturnTypes, "error")
 
 			methodTemplate, err := baseTemplate.Parse(grpcMethodTmpl)
 			if err != nil {
@@ -168,7 +162,7 @@ var grpcMethodTmpl = `func (c *client) {{.Name}}(
 {{- range .Args}}
 	{{.Name}} {{.Type}},
 {{- end}}
-) {{FuncRetVals .ReturnTypes}} {
+) {{NamedFuncRetValsWithError .ReturnArgs}} {
 
 	res, err := c.rpcClient.{{.Name}}(
 		ctx,
@@ -179,10 +173,10 @@ var grpcMethodTmpl = `func (c *client) {{.Name}}(
 		},
 	)
 	if err != nil {
-		return int64{}, string{}, err
+		{{FuncDefaultReturn_Named_WithError .ReturnArgs}}
 	}
 
-	return res.int64Value, res.stringValue, nil
+	return {{range $index, $elem := .ReturnArgs}}{{if $index}}, {{end}}res.{{ToLowerCamel .Name}}{{end}}, nil
 }
 
 `
@@ -190,7 +184,7 @@ var grpcMethodTmpl = `func (c *client) {{.Name}}(
 var grpcMethodEmptyReturnTmpl = `func (c *client) {{.Name}}(
 	ctx context.Context,
 {{- range .Args}}
-	{{.Name}} {{.Type}},
+	{{ToLowerCamel .Name}} {{.Type}},
 {{- end}}
 ) error {
 
@@ -198,7 +192,7 @@ var grpcMethodEmptyReturnTmpl = `func (c *client) {{.Name}}(
 		ctx,
 		&proto.{{.Name}}Request{
 {{- range .Args}}
-			{{ToCamel .Name}}: {{.Name}},
+			{{ToCamel .Name}}: {{ToLowerCamel .Name}},
 {{- end}}
 		},
 	)

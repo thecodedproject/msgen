@@ -20,7 +20,6 @@ var fix = flag.Bool(
 	"Overwrite expected output files with actual test results",
 )
 
-
 func TestGenerate(t *testing.T) {
 
 	generatorsToTest := []struct{
