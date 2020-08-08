@@ -11,9 +11,11 @@ func BaseTemplate() *template.Template {
 
 	return template.New("").Funcs(map[string]interface{}{
 		"FuncRetVals": funcReturnSignature(false, false),
+		"FuncRetValsWithError": funcReturnSignature(false, true),
 		"NamedFuncRetVals": funcReturnSignature(true, false),
 		"NamedFuncRetValsWithError": funcReturnSignature(true, true),
 
+		"FuncDefaultReturn_WithError": funcDefaultReturnStatement(false, true),
 		"FuncDefaultReturn_Named_WithError": funcDefaultReturnStatement(true, true),
 
 		"ToLower": strings.ToLower,
@@ -22,9 +24,31 @@ func BaseTemplate() *template.Template {
 	})
 }
 
+// TODO(jcooper): Make this more extensible by storing it in a JSON file
+var defaultReturnValues = map[string]string{
+	"error": "nil",
+	"float32": "0",
+	"float64": "0",
+	"int": "0",
+	"int32": "0",
+	"int64": "0",
+	"string": "\"\"",
+}
+
 func funcReturnSignature(namedReturnVariables, addError bool) func([]parser.Field) string {
 
 	return func(returnArgs []parser.Field) string {
+
+		if len(returnArgs) == 0 {
+			if !addError {
+				return ""
+			}
+
+			if namedReturnVariables {
+				return "(err error)"
+			}
+			return "error"
+		}
 
 		shouldBraceReturnSignature := len(returnArgs) > 1 || namedReturnVariables || addError
 
@@ -61,23 +85,46 @@ func funcReturnSignature(namedReturnVariables, addError bool) func([]parser.Fiel
 
 func funcDefaultReturnStatement(namedReturnVariables, addError bool) func([]parser.Field) string {
 
-	if !namedReturnVariables {
-		panic("Unamed funcDefaultReturnStatement not implemented")
-	}
-
 	return func(returnArgs []parser.Field) string {
+
+		if len(returnArgs) == 0 {
+			if !addError {
+				return "return"
+			}
+
+			if namedReturnVariables {
+				return "return err"
+			}
+
+			return "return " + defaultReturnValues["error"]
+		}
 
 		returnStatement := "return "
 
 		for i := range returnArgs {
-			returnStatement += strcase.ToLowerCamel("res_" + returnArgs[i].Name)
+			if namedReturnVariables {
+				returnStatement += strcase.ToLowerCamel("res_" + returnArgs[i].Name)
+			} else {
+				defaultRetVal, ok := defaultReturnValues[returnArgs[i].Type]
+				if !ok {
+					panic("No default return value for type" + returnArgs[i].Type)
+				}
+				returnStatement += defaultRetVal
+			}
+
 			if i != len(returnArgs)-1 {
 				returnStatement += ", "
 			}
 		}
 
 		if addError {
-			returnStatement += ", err"
+			returnStatement += ", "
+			if namedReturnVariables {
+				returnStatement += "err"
+			} else {
+				returnStatement += defaultReturnValues["error"]
+			}
+
 		}
 
 		return returnStatement

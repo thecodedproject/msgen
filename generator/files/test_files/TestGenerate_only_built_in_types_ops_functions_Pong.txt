@@ -1,0 +1,14 @@
+package ops
+
+import(
+	"context"
+)
+
+func Pong(
+	ctx context.Context,
+	b Backends,
+) (int64, string, error) {
+
+	return 0, "", nil
+}
+

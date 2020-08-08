@@ -1,0 +1,16 @@
+package ops
+
+import(
+	"context"
+)
+
+func Ping(
+	ctx context.Context,
+	b Backends,
+	int64Value int64,
+	stringValue string,
+) error {
+
+	return nil
+}
+
