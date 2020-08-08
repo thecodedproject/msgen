@@ -8,6 +8,7 @@ import(
 	"github.com/thecodedproject/msgen/generator/files/client_logical"
 	"github.com/thecodedproject/msgen/generator/files/client_grpc"
 	"github.com/thecodedproject/msgen/generator/files/client_test_file"
+	"github.com/thecodedproject/msgen/generator/files/rpc_server"
 	"github.com/thecodedproject/msgen/parser"
 	"io"
 	"io/ioutil"
@@ -42,6 +43,11 @@ func TestGenerate(t *testing.T) {
 			Name: "Client Test",
 			Function: client_test_file.GenerateBuffer,
 			ExpectedFileSuffix: "_client_test.txt",
+		},
+		{
+			Name: "Rpc Server",
+			Function: rpc_server.GenerateBuffer,
+			ExpectedFileSuffix: "_rpc_server.txt",
 		},
 	}
 

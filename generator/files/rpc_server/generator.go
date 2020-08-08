@@ -1,4 +1,4 @@
-package client_test_file
+package rpc_server
 
 import(
 	"github.com/thecodedproject/msgen/generator/files"
@@ -40,17 +40,11 @@ func GenerateBuffer(
 		Imports []string
 		ServiceName string
 	}{
-		Package: "client_test",
+		Package: "rpc_server",
 		Imports: []string{
 			"\"context\"",
-			"\"github.com/stretchr/testify/suite\"",
-			"\"google.golang.org/grpc\"",
-			"\"google.golang.org/grpc/connectivity\"",
-			"\"" + serviceRootImportPath + "\"",
 			"\"" + serviceRootImportPath + "/ops\"",
-			"\"testing\"",
-			"logical_client \"" + serviceRootImportPath + "/client/logical\"",
-			"logical_grpc \"" + serviceRootImportPath + "/client/grpc\"",
+			"\"" + serviceRootImportPath + "/proto\"",
 		},
 		ServiceName: "SomeService",
 	})
@@ -101,57 +95,39 @@ import(
 {{- end}}
 )
 
-
-type clientSuite struct {
-	suite.Suite
-
-	ctx      context.Context
-	client   service.Client
-	backends *ops.Backends
+type Server struct {
+	b ops.Backends
 }
 
-func TestLogical(t *testing.T) {
-	suite.Run(t, new(TestLogicalSuite))
-}
-
-func TestGRPC(t *testing.T) {
-	suite.Run(t, new(TestGRPCSuite))
-}
-
-type TestLogicalSuite struct {
-	clientSuite
-}
-
-func (s *TestLogicalSuite) SetupTest() {
-	s.backends = ops.NewBackendsForTesting(s.T())
-	s.client = logical_client.New(s.backends)
-}
-
-type TestGRPCSuite struct {
-	clientSuite
-}
-
-func (s *TestGRPCSuite) SetupTest() {
-	s.backends = ops.NewBackendsForTesting(s.T())
-	s.client = grpc_client.NewForTesting(s.T(), s.backends)
+func New(b ops.Backends) *Server {
+	return &Server{
+		b: b,
+	}
 }
 
 `
 
-var testMethodTmpl = `func (s *clientSuite) Test{{ToCamel .Name}}() {
-{{range .Args}}
-	var {{ToLowerCamel .Name}} {{.Type}}
-{{- end}}
-	var err error
+var testMethodTmpl = `func (s *Server) {{ToCamel .Name}}(
+	ctx context.Context,
+	req *proto.{{ToCamel .Name}}Request,
+) (*proto.{{ToCamel .Name}}Response, error) {
 
-	{{range .ReturnArgs}}_, {{end}}err = s.client.{{ToCamel .Name}}(
+	{{range .ReturnArgs}}{{ToLowerCamel .Name}}, {{end}}err := ops.{{ToCamel .Name}}(
+		ctx,
+		s.b,
 {{- range .Args}}
-		{{ToLowerCamel .Name}},
+		req.{{ToLowerCamel .Name}},
 {{- end}}
 	)
-	s.Require().NoError(err)
+	if err != nil {
+		return nil, err
+	}
 
-	s.Assert().Fail("TODO: Implement test for client.{{ToCamel .Name}}")
+	return &proto.{{ToCamel .Name}}Response{
+{{- range .ReturnArgs}}
+		{{ToCamel .Name}}: {{ToLowerCamel .Name}},
+{{- end}}
+	}, nil
 }
 
 `
