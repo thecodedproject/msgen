@@ -7,6 +7,7 @@ import(
 	"github.com/stretchr/testify/require"
 	"github.com/thecodedproject/msgen/generator/files/client_logical"
 	"github.com/thecodedproject/msgen/generator/files/client_grpc"
+	"github.com/thecodedproject/msgen/generator/files/client_test_file"
 	"github.com/thecodedproject/msgen/parser"
 	"io"
 	"io/ioutil"
@@ -36,6 +37,11 @@ func TestGenerate(t *testing.T) {
 			Name: "Client GRPC",
 			Function: client_grpc.GenerateBuffer,
 			ExpectedFileSuffix: "_client_grpc.txt",
+		},
+		{
+			Name: "Client Test",
+			Function: client_test_file.GenerateBuffer,
+			ExpectedFileSuffix: "_client_test.txt",
 		},
 	}
 

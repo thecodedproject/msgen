@@ -157,18 +157,18 @@ func NewClientForTesting(t *testing.T, conn *grpc.ClientConn) *client {
 
 `
 
-var grpcMethodTmpl = `func (c *client) {{.Name}}(
+var grpcMethodTmpl = `func (c *client) {{ToCamel .Name}}(
 	ctx context.Context,
 {{- range .Args}}
-	{{.Name}} {{.Type}},
+	{{ToLowerCamel .Name}} {{.Type}},
 {{- end}}
 ) {{NamedFuncRetValsWithError .ReturnArgs}} {
 
-	res, err := c.rpcClient.{{.Name}}(
+	res, err := c.rpcClient.{{ToCamel .Name}}(
 		ctx,
-		&proto.{{.Name}}Request{
+		&proto.{{ToCamel .Name}}Request{
 {{- range .Args}}
-			{{.Name}}: {{.Name}},
+			{{ToCamel .Name}}: {{ToLowerCamel .Name}},
 {{- end}}
 		},
 	)
@@ -181,16 +181,16 @@ var grpcMethodTmpl = `func (c *client) {{.Name}}(
 
 `
 
-var grpcMethodEmptyReturnTmpl = `func (c *client) {{.Name}}(
+var grpcMethodEmptyReturnTmpl = `func (c *client) {{ToCamel .Name}}(
 	ctx context.Context,
 {{- range .Args}}
 	{{ToLowerCamel .Name}} {{.Type}},
 {{- end}}
 ) error {
 
-	_, err := c.rpcClient.{{.Name}}(
+	_, err := c.rpcClient.{{ToCamel .Name}}(
 		ctx,
-		&proto.{{.Name}}Request{
+		&proto.{{ToCamel .Name}}Request{
 {{- range .Args}}
 			{{ToCamel .Name}}: {{ToLowerCamel .Name}},
 {{- end}}
