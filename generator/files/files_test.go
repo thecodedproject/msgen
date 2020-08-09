@@ -5,6 +5,7 @@ import(
 	"flag"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/thecodedproject/msgen/generator/files/api"
 	"github.com/thecodedproject/msgen/generator/files/client_logical"
 	"github.com/thecodedproject/msgen/generator/files/client_grpc"
 	"github.com/thecodedproject/msgen/generator/files/client_test_file"
@@ -30,6 +31,11 @@ func TestSingleFileGenerators(t *testing.T) {
 		Function func(string, parser.ProtoInterface, io.Writer) error
 		ExpectedFileSuffix string
 	}{
+		{
+			Name: "Api declaration",
+			Function: api.GenerateBuffer,
+			ExpectedFileSuffix: "_api.txt",
+		},
 		{
 			Name: "Client Logical",
 			Function: client_logical.GenerateBuffer,
