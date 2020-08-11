@@ -1,7 +1,7 @@
 package ops_functions
 
 import(
-	"github.com/thecodedproject/msgen/generator/files"
+	"github.com/thecodedproject/msgen/generator/files/common"
 	"github.com/thecodedproject/msgen/generator/files/proto_helpers"
 	"github.com/thecodedproject/msgen/parser"
 	"io"
@@ -29,9 +29,9 @@ func GenerateBufferForMethod(
 	methodName string,
 ) error {
 
-	baseTemplate := files.BaseTemplate()
+	baseTemplate := common.BaseTemplate()
 
-	header, err := baseTemplate.Parse(testHeaderTmpl)
+	header, err := baseTemplate.Parse(headerTmpl)
 	if err != nil {
 		return err
 	}
@@ -67,7 +67,7 @@ func GenerateBufferForMethod(
 		ReturnArgs: returnArgs,
 	}
 
-	methodTemplate, err := baseTemplate.Parse(testMethodTmpl)
+	methodTemplate, err := baseTemplate.Parse(methodTmpl)
 	if err != nil {
 		return err
 	}
@@ -80,7 +80,7 @@ func GenerateBufferForMethod(
 	return nil
 }
 
-var testHeaderTmpl = `package {{.Package}}
+var headerTmpl = `package {{.Package}}
 
 import(
 {{- range .Imports}}
@@ -90,7 +90,7 @@ import(
 
 `
 
-var testMethodTmpl = `func {{ToCamel .Name}}(
+var methodTmpl = `func {{ToCamel .Name}}(
 	ctx context.Context,
 	b Backends,
 {{- range .Args}}

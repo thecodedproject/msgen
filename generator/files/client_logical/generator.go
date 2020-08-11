@@ -1,7 +1,7 @@
 package client_logical
 
 import(
-	"github.com/thecodedproject/msgen/generator/files"
+	"github.com/thecodedproject/msgen/generator/files/common"
 	"github.com/thecodedproject/msgen/generator/files/proto_helpers"
 	"github.com/thecodedproject/msgen/parser"
 	"io"
@@ -13,7 +13,8 @@ type Method struct {
 	ReturnArgs []parser.Field
 }
 
-func GenerateClient(
+func Generate(
+	serviceRootImportPath string,
 	i parser.ProtoInterface,
 	outputDir string,
 ) error {
@@ -28,7 +29,7 @@ func GenerateBuffer(
 	writer io.Writer,
 ) error {
 
-	baseTemplate := files.BaseTemplate()
+	baseTemplate := common.BaseTemplate()
 
 	header, err := baseTemplate.Parse(logicalHeaderTmpl)
 	if err != nil {

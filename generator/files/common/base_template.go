@@ -1,4 +1,4 @@
-package files
+package common
 
 import(
 	"github.com/iancoleman/strcase"
