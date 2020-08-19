@@ -1,8 +1,22 @@
 package common
 
+import(
+	"path"
+	"os"
+)
+
 func CreatePathAndOpen(
 	filepath string,
-) error {
+) (*os.File, error) {
 
-	return nil
+	dir, _ := path.Split(filepath)
+
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		err := os.MkdirAll(dir, os.ModePerm)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return os.Create(filepath)
 }

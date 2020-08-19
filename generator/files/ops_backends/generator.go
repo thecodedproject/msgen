@@ -2,17 +2,30 @@ package ops_backends
 
 import(
 	"github.com/thecodedproject/msgen/generator/files/common"
-	"github.com/thecodedproject/msgen/generator/files/proto_helpers"
-	"github.com/thecodedproject/msgen/parser"
 	"io"
+	"path"
+)
+
+const(
+	relativePath = "ops/backends.go"
 )
 
 func Generate(
+	serviceRootImportPath string,
 	outputDir string,
 ) error {
 
-	panic("not implemented")
-	return nil
+	outputFile := path.Join(outputDir, relativePath)
+
+	writer, err := common.CreatePathAndOpen(outputFile)
+	if err != nil {
+		return err
+	}
+
+	return GenerateBuffer(
+		serviceRootImportPath,
+		writer,
+	)
 }
 
 func GenerateBuffer(
@@ -22,12 +35,12 @@ func GenerateBuffer(
 
 	baseTemplate := common.BaseTemplate()
 
-	header, err := baseTemplate.Parse(testHeaderTmpl)
+	header, err := baseTemplate.Parse(headerTmpl)
 	if err != nil {
 		return err
 	}
 
-	return header.Execute(writer, struct{})
+	return header.Execute(writer, struct{
 		Package string
 	}{
 		Package: "ops",

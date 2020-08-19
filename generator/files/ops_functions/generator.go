@@ -1,10 +1,16 @@
 package ops_functions
 
 import(
+	"github.com/iancoleman/strcase"
 	"github.com/thecodedproject/msgen/generator/files/common"
 	"github.com/thecodedproject/msgen/generator/files/proto_helpers"
 	"github.com/thecodedproject/msgen/parser"
 	"io"
+	"path"
+)
+
+const(
+	opsPath = "ops"
 )
 
 type Method struct {
@@ -14,11 +20,35 @@ type Method struct {
 }
 
 func Generate(
+	serviceRootImportPath string,
 	i parser.ProtoInterface,
 	outputDir string,
 ) error {
 
-	panic("not implemented")
+
+	for _, method := range i.Methods {
+
+		outputFile := path.Join(
+			outputDir,
+			opsPath,
+			strcase.ToSnake(method.Name) + ".go",
+		)
+
+		writer, err := common.CreatePathAndOpen(outputFile)
+		if err != nil {
+			return err
+		}
+
+		err = GenerateBufferForMethod(
+			serviceRootImportPath,
+			i,
+			writer,
+			method.Name,
+		)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

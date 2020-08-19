@@ -8,6 +8,10 @@ import(
 	"path"
 )
 
+const(
+	relativePath = "api.go"
+)
+
 type Method struct {
 	Name string
 	Args []parser.Field
@@ -15,12 +19,23 @@ type Method struct {
 }
 
 func Generate(
+	serviceRootImportPath string,
 	i parser.ProtoInterface,
 	outputDir string,
 ) error {
 
-	panic("not implemented")
-	return nil
+	outputFile := path.Join(outputDir, relativePath)
+
+	writer, err := common.CreatePathAndOpen(outputFile)
+	if err != nil {
+		return err
+	}
+
+	return GenerateBuffer(
+		serviceRootImportPath,
+		i,
+		writer,
+	)
 }
 
 func GenerateBuffer(
@@ -70,6 +85,8 @@ func getAllMethods(i parser.ProtoInterface) ([]Method, error) {
 		if err != nil {
 			return nil, err
 		}
+
+		args = append([]parser.Field{{Name: "ctx", Type: "context.Context"}}, args...)
 
 		returnArgs, err := proto_helpers.MethodResponseFields(i, iMethod.Name)
 		if err != nil {

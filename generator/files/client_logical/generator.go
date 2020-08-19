@@ -5,6 +5,11 @@ import(
 	"github.com/thecodedproject/msgen/generator/files/proto_helpers"
 	"github.com/thecodedproject/msgen/parser"
 	"io"
+	"path"
+)
+
+const(
+	relativePath = "client/logical/client.go"
 )
 
 type Method struct {
@@ -19,8 +24,18 @@ func Generate(
 	outputDir string,
 ) error {
 
-	panic("not implemented")
-	return nil
+	outputFile := path.Join(outputDir, relativePath)
+
+	writer, err := common.CreatePathAndOpen(outputFile)
+	if err != nil {
+		return err
+	}
+
+	return GenerateBuffer(
+		serviceRootImportPath,
+		i,
+		writer,
+	)
 }
 
 func GenerateBuffer(

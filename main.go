@@ -2,7 +2,7 @@ package main
 
 import(
 	"flag"
-	"github.com/thecodedproject/msgen/generator"
+	"github.com/thecodedproject/msgen/generator/files"
 	"github.com/thecodedproject/msgen/parser"
 	"log"
 )
@@ -13,10 +13,12 @@ var importBasePath = flag.String("import", "", "base import for microserice")
 
 func main() {
 
-	if protoPath == nil {
+	flag.Parse()
+
+	if *protoPath == "" {
 		log.Fatal("Must define proto path")
 	}
-	if importBasePath == nil {
+	if *importBasePath == "" {
 		log.Fatal("Must specify base import for microserice")
 	}
 
@@ -25,7 +27,7 @@ func main() {
 		log.Fatal("Parse error:", err.Error())
 	}
 
-	err := generate.Generate(
+	err = files.Generate(
 		*importBasePath,
 		iProto,
 		*msDir,
