@@ -5,7 +5,7 @@ package rpc_server
 import(
 	"context"
 	"some/service/ops"
-	"some/service/proto"
+	"some/service/servicepb"
 )
 
 type Server struct {
@@ -20,8 +20,8 @@ func New(b ops.Backends) *Server {
 
 func (s *Server) Ping(
 	ctx context.Context,
-	req *proto.PingRequest,
-) (*proto.PingResponse, error) {
+	req *servicepb.PingRequest,
+) (*servicepb.PingResponse, error) {
 
 	err := ops.Ping(
 		ctx,
@@ -33,14 +33,14 @@ func (s *Server) Ping(
 		return nil, err
 	}
 
-	return &proto.PingResponse{
+	return &servicepb.PingResponse{
 	}, nil
 }
 
 func (s *Server) Pong(
 	ctx context.Context,
-	req *proto.PongRequest,
-) (*proto.PongResponse, error) {
+	req *servicepb.PongRequest,
+) (*servicepb.PongResponse, error) {
 
 	int64Value, stringValue, err := ops.Pong(
 		ctx,
@@ -50,7 +50,7 @@ func (s *Server) Pong(
 		return nil, err
 	}
 
-	return &proto.PongResponse{
+	return &servicepb.PongResponse{
 		Int64Value: int64Value,
 		StringValue: stringValue,
 	}, nil
