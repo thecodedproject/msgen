@@ -9,7 +9,7 @@ import(
 	"github.com/thecodedproject/msgen/generator/files/ops_functions"
 	"github.com/thecodedproject/msgen/generator/files/rpc_server"
 	"github.com/thecodedproject/msgen/parser"
-	//"path"
+	"github.com/pkg/errors"
 )
 
 func Generate(
@@ -24,7 +24,7 @@ func Generate(
 		outputDir,
 	)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "api.Generate")
 	}
 
 	err = client_grpc.Generate(
@@ -33,7 +33,7 @@ func Generate(
 		outputDir,
 	)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "client_grpc.Generate")
 	}
 
 	err = client_logical.Generate(
@@ -42,7 +42,7 @@ func Generate(
 		outputDir,
 	)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "client_logical.Generate")
 	}
 
 	err = client_test_file.Generate(
@@ -51,7 +51,7 @@ func Generate(
 		outputDir,
 	)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "client_test_file.Generate")
 	}
 
 	err = ops_backends.Generate(
@@ -59,7 +59,7 @@ func Generate(
 		outputDir,
 	)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "ops_backends.Generate")
 	}
 
 	err = ops_functions.Generate(
@@ -68,7 +68,7 @@ func Generate(
 		outputDir,
 	)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "ops_functions.Generate")
 	}
 
 	err = rpc_server.Generate(
@@ -77,7 +77,7 @@ func Generate(
 		outputDir,
 	)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "rpc_server.Generate")
 	}
 
 	return nil

@@ -11,12 +11,20 @@ func CreatePathAndOpen(
 
 	dir, _ := path.Split(filepath)
 
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		err := os.MkdirAll(dir, os.ModePerm)
-		if err != nil {
-			return nil, err
+	if dir != "" {
+		if _, err := os.Stat(dir); os.IsNotExist(err) {
+			err := os.MkdirAll(dir, os.ModePerm)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
 	return os.Create(filepath)
+}
+
+func ServiceNameFromRootImportPath(rootImportPath string) string {
+
+	_, serviceName := path.Split(rootImportPath)
+	return serviceName
 }
