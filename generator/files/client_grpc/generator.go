@@ -57,18 +57,22 @@ func GenerateBuffer(
 		Imports []string
 		ServiceName string
 		ProtoPackage string
+		ProtoServiceName string
 	}{
 		Package: "grpc",
 		Imports: []string{
 			"context",
+			"errors",
 			"flag",
 			"google.golang.org/grpc",
 			"google.golang.org/grpc/connectivity",
 			serviceRootImportPath + "/" + i.ProtoPackage,
 			"testing",
+			"time",
 		},
 		ServiceName: common.ServiceNameFromRootImportPath(serviceRootImportPath),
 		ProtoPackage: i.ProtoPackage,
+		ProtoServiceName: i.ServiceName,
 	})
 	if err != nil {
 		return err
@@ -137,7 +141,7 @@ var address = flag.String("{{ToLower .ServiceName}}_grpc_address", "", "host:por
 
 type client struct {
 	rpcConn *grpc.ClientConn
-	rpcClient addpb.AddClient
+	rpcClient {{.ProtoPackage}}.{{.ProtoServiceName}}Client
 }
 
 func IsGRPCEnabled() bool {
@@ -164,12 +168,12 @@ func New() (*client, error) {
 
 	return &client{
 		rpcConn: conn,
-		rpcClient: {{.ProtoPackage}}.NewSomeServiceClient(conn),
+		rpcClient: {{.ProtoPackage}}.New{{.ProtoServiceName}}Client(conn),
 	}, nil
 }
 
 func NewClientForTesting(t *testing.T, conn *grpc.ClientConn) *client {
-	return &Client{
+	return &client{
 		rpcConn: conn,
 		rpcClient: addpb.NewAddClient(conn),
 	}

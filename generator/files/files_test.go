@@ -68,6 +68,7 @@ func TestSingleFileGenerators(t *testing.T) {
 			Name: "Methods using only built in types",
 			ServiceRootImportPath: "some/service",
 			ProtoInterface: parser.ProtoInterface{
+				ServiceName: "SomeService",
 				ProtoPackage: "servicepb",
 				Methods: []parser.Method{
 					{

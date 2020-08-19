@@ -19,6 +19,7 @@ func TestParse(t *testing.T) {
 			ProtoFile: "./example_proto/TestParse_some.proto",
 			Expected: parser.ProtoInterface{
 				ProtoPackage: "examplepb",
+				ServiceName: "Some",
 				Methods: []parser.Method{
 					{
 						Name: "Ping",

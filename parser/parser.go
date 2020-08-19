@@ -109,7 +109,8 @@ func rpcHandler(ms *ProtoInterface) func(*proto.RPC) {
 
 func serviceHandler(ms *ProtoInterface) func(*proto.Service) {
 
-	return func(*proto.Service) {
+	return func(s *proto.Service) {
+		ms.ServiceName = s.Name
 	}
 }
 

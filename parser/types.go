@@ -2,6 +2,7 @@ package parser
 
 type ProtoInterface struct {
 
+	ServiceName string
 	ProtoPackage string
 	Methods []Method
 	Messages []Message

@@ -134,7 +134,7 @@ var testMethodTmpl = `func (s *Server) {{ToCamel .Name}}(
 		ctx,
 		s.b,
 {{- range .Args}}
-		req.{{ToLowerCamel .Name}},
+		req.{{ToCamel .Name}},
 {{- end}}
 	)
 	if err != nil {
