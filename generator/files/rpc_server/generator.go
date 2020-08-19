@@ -16,6 +16,7 @@ type Method struct {
 	Name string
 	Args []parser.Field
 	ReturnArgs []parser.Field
+	ProtoPackage string
 }
 
 func Generate(
@@ -60,7 +61,7 @@ func GenerateBuffer(
 		Imports: []string{
 			"\"context\"",
 			"\"" + serviceRootImportPath + "/ops\"",
-			"\"" + serviceRootImportPath + "/proto\"",
+			"\"" + serviceRootImportPath + "/" + i.ProtoPackage + "\"",
 		},
 		ServiceName: "SomeService",
 	})
@@ -85,6 +86,7 @@ func GenerateBuffer(
 			Name: method.Name,
 			Args: args,
 			ReturnArgs: returnArgs,
+			ProtoPackage: i.ProtoPackage,
 		}
 
 		methodTemplate, err := baseTemplate.Parse(testMethodTmpl)
@@ -125,8 +127,8 @@ func New(b ops.Backends) *Server {
 
 var testMethodTmpl = `func (s *Server) {{ToCamel .Name}}(
 	ctx context.Context,
-	req *proto.{{ToCamel .Name}}Request,
-) (*proto.{{ToCamel .Name}}Response, error) {
+	req *{{.ProtoPackage}}.{{ToCamel .Name}}Request,
+) (*{{.ProtoPackage}}.{{ToCamel .Name}}Response, error) {
 
 	{{range .ReturnArgs}}{{ToLowerCamel .Name}}, {{end}}err := ops.{{ToCamel .Name}}(
 		ctx,
@@ -139,7 +141,7 @@ var testMethodTmpl = `func (s *Server) {{ToCamel .Name}}(
 		return nil, err
 	}
 
-	return &proto.{{ToCamel .Name}}Response{
+	return &{{.ProtoPackage}}.{{ToCamel .Name}}Response{
 {{- range .ReturnArgs}}
 		{{ToCamel .Name}}: {{ToLowerCamel .Name}},
 {{- end}}
