@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package example_proto;
+package examplepb;
 
 service Some {
   rpc Ping (PingRequest) returns (PingResponse) {}

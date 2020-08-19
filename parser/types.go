@@ -2,6 +2,7 @@ package parser
 
 type ProtoInterface struct {
 
+	ProtoPackage string
 	Methods []Method
 	Messages []Message
 	//Enums []Enum

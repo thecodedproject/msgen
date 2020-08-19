@@ -89,7 +89,9 @@ func optionHandler(ms *ProtoInterface) func(*proto.Option) {
 
 func packageHandler(ms *ProtoInterface) func(*proto.Package) {
 
-	return func(*proto.Package) {
+	return func(p *proto.Package) {
+
+		ms.ProtoPackage = p.Name
 	}
 }
 

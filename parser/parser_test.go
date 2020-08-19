@@ -4,7 +4,6 @@ import(
 	"testing"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/thecodedproject/msgen/generator"
 	"github.com/thecodedproject/msgen/parser"
 )
 
@@ -19,6 +18,7 @@ func TestParse(t *testing.T) {
 			Name: "some",
 			ProtoFile: "./example_proto/TestParse_some.proto",
 			Expected: parser.ProtoInterface{
+				ProtoPackage: "examplepb",
 				Methods: []parser.Method{
 					{
 						Name: "Ping",
