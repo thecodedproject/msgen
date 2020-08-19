@@ -11,7 +11,7 @@ import(
 	"testing"
 )
 
-var address = flag.String("someservice_grpc_address", "", "host:port of someservice gRPC service")
+var address = flag.String("service_grpc_address", "", "host:port of service gRPC service")
 
 type client struct {
 	rpcConn *grpc.ClientConn

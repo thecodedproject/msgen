@@ -52,6 +52,8 @@ func GenerateBuffer(
 		return err
 	}
 
+	_, serviceName := path.Split(serviceRootImportPath)
+
 	err = header.Execute(writer, struct{
 		Package string
 		Imports []string
@@ -67,7 +69,7 @@ func GenerateBuffer(
 			serviceRootImportPath + "/" + i.ProtoPackage,
 			"testing",
 		},
-		ServiceName: "SomeService",
+		ServiceName: serviceName,
 		ProtoPackage: i.ProtoPackage,
 	})
 	if err != nil {
