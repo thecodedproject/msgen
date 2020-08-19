@@ -16,6 +16,7 @@ type Method struct {
 	Name string
 	Args []parser.Field
 	ReturnArgs []parser.Field
+	ProtoPackage string
 }
 
 func Generate(
@@ -55,6 +56,7 @@ func GenerateBuffer(
 		Package string
 		Imports []string
 		ServiceName string
+		ProtoPackage string
 	}{
 		Package: "grpc",
 		Imports: []string{
@@ -62,10 +64,11 @@ func GenerateBuffer(
 			"flag",
 			"google.golang.org/grpc",
 			"google.golang.org/grpc/connectivity",
-			serviceRootImportPath + "/proto",
+			serviceRootImportPath + "/" + i.ProtoPackage,
 			"testing",
 		},
 		ServiceName: "SomeService",
+		ProtoPackage: i.ProtoPackage,
 	})
 	if err != nil {
 		return err
@@ -88,6 +91,7 @@ func GenerateBuffer(
 			Name: method.Name,
 			Args: args,
 			ReturnArgs: returnArgs,
+			ProtoPackage: i.ProtoPackage,
 		}
 
 		if len(methodParams.ReturnArgs) == 0 {
@@ -160,7 +164,7 @@ func New() (*client, error) {
 
 	return &client{
 		rpcConn: conn,
-		rpcClient: proto.NewSomeServiceClient(conn),
+		rpcClient: {{.ProtoPackage}}.NewSomeServiceClient(conn),
 	}, nil
 }
 
@@ -182,7 +186,7 @@ var grpcMethodTmpl = `func (c *client) {{ToCamel .Name}}(
 
 	res, err := c.rpcClient.{{ToCamel .Name}}(
 		ctx,
-		&proto.{{ToCamel .Name}}Request{
+		&{{.ProtoPackage}}.{{ToCamel .Name}}Request{
 {{- range .Args}}
 			{{ToCamel .Name}}: {{ToLowerCamel .Name}},
 {{- end}}
@@ -206,7 +210,7 @@ var grpcMethodEmptyReturnTmpl = `func (c *client) {{ToCamel .Name}}(
 
 	_, err := c.rpcClient.{{ToCamel .Name}}(
 		ctx,
-		&proto.{{ToCamel .Name}}Request{
+		&{{.ProtoPackage}}.{{ToCamel .Name}}Request{
 {{- range .Args}}
 			{{ToCamel .Name}}: {{ToLowerCamel .Name}},
 {{- end}}

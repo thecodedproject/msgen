@@ -7,7 +7,7 @@ import(
 	"flag"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
-	"some/service/proto"
+	"some/service/servicepb"
 	"testing"
 )
 
@@ -42,7 +42,7 @@ func New() (*client, error) {
 
 	return &client{
 		rpcConn: conn,
-		rpcClient: proto.NewSomeServiceClient(conn),
+		rpcClient: servicepb.NewSomeServiceClient(conn),
 	}, nil
 }
 
@@ -61,7 +61,7 @@ func (c *client) Ping(
 
 	_, err := c.rpcClient.Ping(
 		ctx,
-		&proto.PingRequest{
+		&servicepb.PingRequest{
 			Int64Value: int64Value,
 			StringValue: stringValue,
 		},
@@ -75,7 +75,7 @@ func (c *client) Pong(
 
 	res, err := c.rpcClient.Pong(
 		ctx,
-		&proto.PongRequest{
+		&servicepb.PongRequest{
 		},
 	)
 	if err != nil {
