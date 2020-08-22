@@ -19,7 +19,7 @@ import(
 	"log"
 )
 
-func setupServer(s *TestGRPCSuite, b ops.Backends) (string) {
+func setupGRPCServer(s *TestGRPCSuite, b ops.Backends) (string) {
 
 	listener, err := net.Listen("tcp", "localhost:0")
 	s.Require().NoError(err)
@@ -38,9 +38,9 @@ func setupServer(s *TestGRPCSuite, b ops.Backends) (string) {
 	return listener.Addr().String()
 }
 
-func setupClient(s *TestGRPCSuite, b ops.Backends) service.Client {
+func setupGRPCClient(s *TestGRPCSuite, b ops.Backends) service.Client {
 
-	serverAddr := setupServer(s, b)
+	serverAddr := setupGRPCServer(s, b)
 	conn, err := grpc.Dial(serverAddr, grpc.WithInsecure())
 	s.Require().NoError(err)
 
@@ -65,9 +65,7 @@ func setupClient(s *TestGRPCSuite, b ops.Backends) service.Client {
 type clientSuite struct {
 	suite.Suite
 
-	ctx      context.Context
-	client   service.Client
-	backends ops.Backends
+	createClient func(b ops.Backends) service.Client
 }
 
 func TestLogical(t *testing.T) {
@@ -83,8 +81,9 @@ type TestLogicalSuite struct {
 }
 
 func (s *TestLogicalSuite) SetupTest() {
-	s.backends = ops.NewBackendsForTesting(s.T())
-	s.client = logical_client.New(s.backends)
+	s.createClient = func(b ops.Backends) service.Client {
+		return logical_client.New(b)
+	}
 }
 
 type TestGRPCSuite struct {
@@ -92,35 +91,74 @@ type TestGRPCSuite struct {
 }
 
 func (s *TestGRPCSuite) SetupTest() {
-	s.backends = ops.NewBackendsForTesting(s.T())
-	s.client = setupClient(s, s.backends)
+	s.createClient = func(b ops.Backends) service.Client {
+		return setupGRPCClient(s, b)
+	}
 }
 
 func (s *clientSuite) TestPing() {
 
-	var int64Value int64
-	var stringValue string
-	var err error
+	testCases := []struct{
+		Name string
+	}{
+		{
+			Name: "some_test",
+		},
+	}
 
-	err = s.client.Ping(
-		s.ctx,
-		int64Value,
-		stringValue,
-	)
-	s.Require().NoError(err)
+	for _, test := range testCases {
+		s.T().Run(test.Name, func(t *testing.T) {
 
-	s.Assert().Fail("TODO: Implement test for client.Ping")
+			c := s.createClient(
+				ops.NewBackendsForTesting(
+					t,
+				),
+			)
+
+			ctx := context.Background()
+			var int64Value int64
+			var stringValue string
+			var err error
+			err = c.Ping(
+				ctx,
+				int64Value,
+				stringValue,
+			)
+			s.Require().NoError(err)
+
+			s.Assert().Fail("TODO: Implement test for client.Ping")
+		})
+	}
 }
 
 func (s *clientSuite) TestPong() {
 
-	var err error
+	testCases := []struct{
+		Name string
+	}{
+		{
+			Name: "some_test",
+		},
+	}
 
-	_, _, err = s.client.Pong(
-		s.ctx,
-	)
-	s.Require().NoError(err)
+	for _, test := range testCases {
+		s.T().Run(test.Name, func(t *testing.T) {
 
-	s.Assert().Fail("TODO: Implement test for client.Pong")
+			c := s.createClient(
+				ops.NewBackendsForTesting(
+					t,
+				),
+			)
+
+			ctx := context.Background()
+			var err error
+			_, _, err = c.Pong(
+				ctx,
+			)
+			s.Require().NoError(err)
+
+			s.Assert().Fail("TODO: Implement test for client.Pong")
+		})
+	}
 }
 

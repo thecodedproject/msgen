@@ -122,7 +122,7 @@ import(
 {{- end}}
 )
 
-func setupServer(s *TestGRPCSuite, b ops.Backends) (string) {
+func setupGRPCServer(s *TestGRPCSuite, b ops.Backends) (string) {
 
 	listener, err := net.Listen("tcp", "localhost:0")
 	s.Require().NoError(err)
@@ -141,9 +141,9 @@ func setupServer(s *TestGRPCSuite, b ops.Backends) (string) {
 	return listener.Addr().String()
 }
 
-func setupClient(s *TestGRPCSuite, b ops.Backends) {{ToLower .ServiceName}}.Client {
+func setupGRPCClient(s *TestGRPCSuite, b ops.Backends) {{ToLower .ServiceName}}.Client {
 
-	serverAddr := setupServer(s, b)
+	serverAddr := setupGRPCServer(s, b)
 	conn, err := grpc.Dial(serverAddr, grpc.WithInsecure())
 	s.Require().NoError(err)
 
@@ -168,9 +168,7 @@ func setupClient(s *TestGRPCSuite, b ops.Backends) {{ToLower .ServiceName}}.Clie
 type clientSuite struct {
 	suite.Suite
 
-	ctx      context.Context
-	client   {{.ServiceName}}.Client
-	backends ops.Backends
+	createClient func(b ops.Backends) {{ToLower .ServiceName}}.Client
 }
 
 func TestLogical(t *testing.T) {
@@ -186,8 +184,9 @@ type TestLogicalSuite struct {
 }
 
 func (s *TestLogicalSuite) SetupTest() {
-	s.backends = ops.NewBackendsForTesting(s.T())
-	s.client = logical_client.New(s.backends)
+	s.createClient = func(b ops.Backends) {{ToLower .ServiceName}}.Client {
+		return logical_client.New(b)
+	}
 }
 
 type TestGRPCSuite struct {
@@ -195,27 +194,48 @@ type TestGRPCSuite struct {
 }
 
 func (s *TestGRPCSuite) SetupTest() {
-	s.backends = ops.NewBackendsForTesting(s.T())
-	s.client = setupClient(s, s.backends)
+	s.createClient = func(b ops.Backends) {{ToLower .ServiceName}}.Client {
+		return setupGRPCClient(s, b)
+	}
 }
 
 `
 
 var testMethodTmpl = `func (s *clientSuite) Test{{ToCamel .Name}}() {
-{{range .Args}}
-	var {{ToLowerCamel .Name}} {{.Type}}
-{{- end}}
-	var err error
 
-	{{range .ReturnArgs}}_, {{end}}err = s.client.{{ToCamel .Name}}(
-		s.ctx,
+	testCases := []struct{
+		Name string
+	}{
+		{
+			Name: "some_test",
+		},
+	}
+
+	for _, test := range testCases {
+		s.T().Run(test.Name, func(t *testing.T) {
+
+			c := s.createClient(
+				ops.NewBackendsForTesting(
+					t,
+				),
+			)
+
+			ctx := context.Background()
 {{- range .Args}}
-		{{ToLowerCamel .Name}},
+			var {{ToLowerCamel .Name}} {{.Type}}
 {{- end}}
-	)
-	s.Require().NoError(err)
+			var err error
+			{{range .ReturnArgs}}_, {{end}}err = c.{{ToCamel .Name}}(
+				ctx,
+{{- range .Args}}
+				{{ToLowerCamel .Name}},
+{{- end}}
+			)
+			s.Require().NoError(err)
 
-	s.Assert().Fail("TODO: Implement test for client.{{ToCamel .Name}}")
+			s.Assert().Fail("TODO: Implement test for client.{{ToCamel .Name}}")
+		})
+	}
 }
 
 `
