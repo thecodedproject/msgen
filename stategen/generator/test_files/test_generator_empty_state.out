@@ -1,0 +1,22 @@
+package state
+
+imports(
+	"testing"
+)
+
+type Backends interface {
+}
+
+type backendsOption func(*backendsImpl)
+
+func NewBackendsForTesting(
+	_ testing.TB,
+	opts ...backendsOption,
+) *State {
+
+	var s State
+	for _, opt := range opts {
+		opt(&s)
+	}
+	return &s
+}
