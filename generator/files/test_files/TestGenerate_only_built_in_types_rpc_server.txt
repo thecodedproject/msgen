@@ -26,8 +26,8 @@ func (s *Server) Ping(
 	err := ops.Ping(
 		ctx,
 		s.b,
-		req.int64Value,
-		req.stringValue,
+		req.Int64Value,
+		req.StringValue,
 	)
 	if err != nil {
 		return nil, err

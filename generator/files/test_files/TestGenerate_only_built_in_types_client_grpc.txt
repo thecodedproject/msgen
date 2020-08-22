@@ -4,18 +4,20 @@ package grpc
 
 import(
 	"context"
+	"errors"
 	"flag"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
 	"some/service/servicepb"
 	"testing"
+	"time"
 )
 
 var address = flag.String("service_grpc_address", "", "host:port of service gRPC service")
 
 type client struct {
 	rpcConn *grpc.ClientConn
-	rpcClient addpb.AddClient
+	rpcClient servicepb.SomeServiceClient
 }
 
 func IsGRPCEnabled() bool {
@@ -46,10 +48,10 @@ func New() (*client, error) {
 	}, nil
 }
 
-func NewClientForTesting(t *testing.T, conn *grpc.ClientConn) *client {
-	return &Client{
+func NewForTesting(t *testing.T, conn *grpc.ClientConn) *client {
+	return &client{
 		rpcConn: conn,
-		rpcClient: addpb.NewAddClient(conn),
+		rpcClient: servicepb.NewSomeServiceClient(conn),
 	}
 }
 
@@ -82,6 +84,6 @@ func (c *client) Pong(
 		return resInt64Value, resStringValue, err
 	}
 
-	return res.int64Value, res.stringValue, nil
+	return res.Int64Value, res.StringValue, nil
 }
 

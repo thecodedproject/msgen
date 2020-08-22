@@ -119,7 +119,7 @@ type client struct {
 
 func New(b ops.Backends) *client {
 
-	return client{
+	return &client{
 		backends: b,
 	}
 }

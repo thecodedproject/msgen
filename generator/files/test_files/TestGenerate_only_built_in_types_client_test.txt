@@ -8,11 +8,58 @@ import(
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
 	"some/service"
+	"some/service/servicepb"
 	"some/service/ops"
-	"testing"
+	"some/service/rpc_server"
 	logical_client "some/service/client/logical"
-	logical_grpc "some/service/client/grpc"
+	grpc_client "some/service/client/grpc"
+	"testing"
+	"time"
+	"net"
+	"log"
 )
+
+func setupServer(s *TestGRPCSuite, b ops.Backends) (string) {
+
+	listener, err := net.Listen("tcp", "localhost:0")
+	s.Require().NoError(err)
+
+	grpcSrv := grpc.NewServer()
+	s.T().Cleanup(grpcSrv.GracefulStop)
+
+	serviceSrv := rpc_server.New(b)
+	servicepb.RegisterServiceServer(grpcSrv, serviceSrv)
+
+	go func() {
+		err := grpcSrv.Serve(listener)
+		s.Require().NoError(err)
+	}()
+
+	return listener.Addr().String()
+}
+
+func setupClient(s *TestGRPCSuite, b ops.Backends) service.Client {
+
+	serverAddr := setupServer(s, b)
+	conn, err := grpc.Dial(serverAddr, grpc.WithInsecure())
+	s.Require().NoError(err)
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	for {
+		if conn.GetState() == connectivity.Ready {
+			break
+		}
+
+		if !conn.WaitForStateChange(ctx, conn.GetState()) {
+			log.Fatal("grpc timeout whilst connecting")
+		}
+	}
+
+	client := grpc_client.NewForTesting(s.T(), conn)
+	return client
+}
 
 
 type clientSuite struct {
@@ -20,7 +67,7 @@ type clientSuite struct {
 
 	ctx      context.Context
 	client   service.Client
-	backends *ops.Backends
+	backends ops.Backends
 }
 
 func TestLogical(t *testing.T) {
@@ -46,7 +93,7 @@ type TestGRPCSuite struct {
 
 func (s *TestGRPCSuite) SetupTest() {
 	s.backends = ops.NewBackendsForTesting(s.T())
-	s.client = grpc_client.NewForTesting(s.T(), s.backends)
+	s.client = setupClient(s, s.backends)
 }
 
 func (s *clientSuite) TestPing() {
@@ -56,6 +103,7 @@ func (s *clientSuite) TestPing() {
 	var err error
 
 	err = s.client.Ping(
+		s.ctx,
 		int64Value,
 		stringValue,
 	)
@@ -69,6 +117,7 @@ func (s *clientSuite) TestPong() {
 	var err error
 
 	_, _, err = s.client.Pong(
+		s.ctx,
 	)
 	s.Require().NoError(err)
 

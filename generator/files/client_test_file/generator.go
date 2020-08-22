@@ -63,12 +63,17 @@ func GenerateBuffer(
 			"\"google.golang.org/grpc\"",
 			"\"google.golang.org/grpc/connectivity\"",
 			"\"" + serviceRootImportPath + "\"",
+			"\"" + serviceRootImportPath + "/" + i.ProtoPackage + "\"",
 			"\"" + serviceRootImportPath + "/ops\"",
-			"\"testing\"",
+			"\"" + serviceRootImportPath + "/rpc_server\"",
 			"logical_client \"" + serviceRootImportPath + "/client/logical\"",
-			"logical_grpc \"" + serviceRootImportPath + "/client/grpc\"",
+			"grpc_client \"" + serviceRootImportPath + "/client/grpc\"",
+			"\"testing\"",
+			"\"time\"",
+			"\"net\"",
+			"\"log\"",
 		},
-		ServiceName: "SomeService",
+		ServiceName: common.ServiceNameFromRootImportPath(serviceRootImportPath),
 	})
 	if err != nil {
 		return err
@@ -117,13 +122,55 @@ import(
 {{- end}}
 )
 
+func setupServer(s *TestGRPCSuite, b ops.Backends) (string) {
+
+	listener, err := net.Listen("tcp", "localhost:0")
+	s.Require().NoError(err)
+
+	grpcSrv := grpc.NewServer()
+	s.T().Cleanup(grpcSrv.GracefulStop)
+
+	{{ToLowerCamel .ServiceName}}Srv := rpc_server.New(b)
+	{{ToLowerCamel .ServiceName}}pb.Register{{ToCamel .ServiceName}}Server(grpcSrv, {{ToLowerCamel .ServiceName}}Srv)
+
+	go func() {
+		err := grpcSrv.Serve(listener)
+		s.Require().NoError(err)
+	}()
+
+	return listener.Addr().String()
+}
+
+func setupClient(s *TestGRPCSuite, b ops.Backends) {{ToLower .ServiceName}}.Client {
+
+	serverAddr := setupServer(s, b)
+	conn, err := grpc.Dial(serverAddr, grpc.WithInsecure())
+	s.Require().NoError(err)
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	for {
+		if conn.GetState() == connectivity.Ready {
+			break
+		}
+
+		if !conn.WaitForStateChange(ctx, conn.GetState()) {
+			log.Fatal("grpc timeout whilst connecting")
+		}
+	}
+
+	client := grpc_client.NewForTesting(s.T(), conn)
+	return client
+}
+
 
 type clientSuite struct {
 	suite.Suite
 
 	ctx      context.Context
-	client   service.Client
-	backends *ops.Backends
+	client   {{.ServiceName}}.Client
+	backends ops.Backends
 }
 
 func TestLogical(t *testing.T) {
@@ -149,7 +196,7 @@ type TestGRPCSuite struct {
 
 func (s *TestGRPCSuite) SetupTest() {
 	s.backends = ops.NewBackendsForTesting(s.T())
-	s.client = grpc_client.NewForTesting(s.T(), s.backends)
+	s.client = setupClient(s, s.backends)
 }
 
 `
@@ -161,6 +208,7 @@ var testMethodTmpl = `func (s *clientSuite) Test{{ToCamel .Name}}() {
 	var err error
 
 	{{range .ReturnArgs}}_, {{end}}err = s.client.{{ToCamel .Name}}(
+		s.ctx,
 {{- range .Args}}
 		{{ToLowerCamel .Name}},
 {{- end}}

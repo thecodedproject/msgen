@@ -172,10 +172,10 @@ func New() (*client, error) {
 	}, nil
 }
 
-func NewClientForTesting(t *testing.T, conn *grpc.ClientConn) *client {
+func NewForTesting(t *testing.T, conn *grpc.ClientConn) *client {
 	return &client{
 		rpcConn: conn,
-		rpcClient: addpb.NewAddClient(conn),
+		rpcClient: {{.ProtoPackage}}.New{{.ProtoServiceName}}Client(conn),
 	}
 }
 
@@ -200,7 +200,7 @@ var grpcMethodTmpl = `func (c *client) {{ToCamel .Name}}(
 		{{FuncDefaultReturn_Named_WithError .ReturnArgs}}
 	}
 
-	return {{range $index, $elem := .ReturnArgs}}{{if $index}}, {{end}}res.{{ToLowerCamel .Name}}{{end}}, nil
+	return {{range $index, $elem := .ReturnArgs}}{{if $index}}, {{end}}res.{{ToCamel .Name}}{{end}}, nil
 }
 
 `
