@@ -1,0 +1,50 @@
+package state
+
+imports(
+	"another/path/to/subtract"
+	"some/path/to/add"
+	"testing"
+)
+
+type State interface {
+	GetAddClient() add.Client
+	GetSubtractClient() subtract.Client
+}
+
+func (s *stateImpl) GetAddClient() add.Client {
+
+	return s.addClient
+}
+
+func (s *stateImpl) GetSubtractClient() subtract.Client {
+
+	return s.subtractClient
+}
+
+type stateOption func(*stateImpl)
+
+func NewStateForTesting(
+	_ testing.TB,
+	opts ...stateOption,
+) *State {
+
+	var s State
+	for _, opt := range opts {
+		opt(&s)
+	}
+	return &s
+}
+
+func WithAddClient(addClient add.Client) stateOption {
+
+	return func(s *stateImpl) {
+		s.addClient = addClient
+	}
+}
+
+func WithSubtractClient(subtractClient subtract.Client) stateOption {
+
+	return func(s *stateImpl) {
+		s.subtractClient = subtractClient
+	}
+}

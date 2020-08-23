@@ -1,4 +1,4 @@
-package state
+package mypacakge
 
-type State struct {
+type inputImpl struct {
 }

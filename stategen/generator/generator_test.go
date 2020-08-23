@@ -21,15 +21,24 @@ func TestGenerator(t *testing.T) {
 
 	testCases := []struct{
 		Name string
-		StateStructName string
+		InputStructName string
+		OutputInterfaceName string
 		InputFile string
 		ExpectedOutputFile string
 	}{
 		{
 			Name: "Empty state",
-			StateStructName: "State",
+			InputStructName: "inputImpl",
+			OutputInterfaceName: "OutputInterface",
 			InputFile: "./test_files/test_generator_empty_state.in",
 			ExpectedOutputFile: "./test_files/test_generator_empty_state.out",
+		},
+		{
+			Name: "State struct with multiple members and New method",
+			InputStructName: "stateImpl",
+			OutputInterfaceName: "State",
+			InputFile: "./test_files/test_generator_state_struct_with_multiple_members_and_new_method.in",
+			ExpectedOutputFile: "./test_files/test_generator_state_struct_with_multiple_members_and_new_method.out",
 		},
 	}
 
@@ -40,7 +49,8 @@ func TestGenerator(t *testing.T) {
 
 				err := generator.Generate(
 					test.InputFile,
-					test.StateStructName,
+					test.InputStructName,
+					test.OutputInterfaceName,
 					buffer,
 				)
 				require.NoError(t, err)

@@ -1,22 +1,22 @@
-package state
+package mypackage
 
 imports(
 	"testing"
 )
 
-type Backends interface {
+type OutputInterface interface {
 }
 
-type backendsOption func(*backendsImpl)
+type outputInterfaceOption func(*inputImpl)
 
-func NewBackendsForTesting(
+func NewOutputInterfaceForTesting(
 	_ testing.TB,
-	opts ...backendsOption,
-) *State {
+	opts ...outputInterfaceOption,
+) *OutputInterface {
 
-	var s State
+	var o OutputInterface
 	for _, opt := range opts {
-		opt(&s)
+		opt(&o)
 	}
-	return &s
+	return &o
 }

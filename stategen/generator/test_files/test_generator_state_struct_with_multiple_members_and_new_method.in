@@ -1,0 +1,31 @@
+package state
+
+import(
+	"another/path/to/subtract"
+	"log"
+	"some/path/to/add"
+	add_client "some/path/to/add/client"
+	subtract_client "another/path/to/subtract/client"
+)
+
+type stateImpl struct {
+	addClient add.Client
+	subtractClient subtract.Client
+}
+
+func New() *stateImpl {
+
+	var s stateImpl
+
+	s.addClient, err = add_client.Make()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	s.subtractClient, err = subtract_client.Make()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return &s
+}
