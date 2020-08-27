@@ -1,0 +1,78 @@
+package aliasedPackage
+
+imports(
+	"another/path/to/divide"
+	"another/path/to/multiply"
+	"testing"
+	add_package "some/path/to/add"
+	subtract_package "another/path/to/subtract"
+)
+
+type State interface {
+	GetAddClient() add_package.Client
+	GetDivideClient() divide.Client
+	GetMultiplyClient() multiply.Client
+	GetSubtractClient() subtract_package.Client
+}
+
+func (s *stateImpl) GetAddClient() add_package.Client {
+
+	return s.addClient
+}
+
+func (s *stateImpl) GetDivideClient() divide.Client {
+
+	return s.divideClient
+}
+
+func (s *stateImpl) GetMultiplyClient() multiply.Client {
+
+	return s.multiplyClient
+}
+
+func (s *stateImpl) GetSubtractClient() subtract_package.Client {
+
+	return s.subtractClient
+}
+
+type stateOption func(*stateImpl)
+
+func NewStateForTesting(
+	_ testing.TB,
+	opts ...stateOption,
+) *State {
+
+	var s State
+	for _, opt := range opts {
+		opt(&s)
+	}
+	return &s
+}
+
+func WithAddClient(addClient add_package.Client) stateOption {
+
+	return func(s *stateImpl) {
+		s.addClient = addClient
+	}
+}
+
+func WithDivideClient(divideClient divide.Client) stateOption {
+
+	return func(s *stateImpl) {
+		s.divideClient = divideClient
+	}
+}
+
+func WithMultiplyClient(multiplyClient multiply.Client) stateOption {
+
+	return func(s *stateImpl) {
+		s.multiplyClient = multiplyClient
+	}
+}
+
+func WithSubtractClient(subtractClient subtract_package.Client) stateOption {
+
+	return func(s *stateImpl) {
+		s.subtractClient = subtractClient
+	}
+}

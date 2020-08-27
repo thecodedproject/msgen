@@ -1,0 +1,45 @@
+package aliasedPackage
+
+import(
+	"another/path/to/divide"
+	"another/path/to/multiply"
+	"log"
+	add_client "some/path/to/add/client"
+	add_package "some/path/to/add"
+	subtract_client "another/path/to/subtract/client"
+	subtract_package "another/path/to/subtract"
+)
+
+type stateImpl struct {
+	addClient add_package.Client
+	divideClient divide.Client
+	multiplyClient multiply.Client
+	subtractClient subtract_package.Client
+}
+
+func New() *stateImpl {
+
+	var s stateImpl
+
+	s.addClient, err = add_client.Make()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	s.divideClient, err = divide.Make()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	s.multiplyClient, err = multiply.Make()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	s.subtractClient, err = subtract_client.Make()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return &s
+}
