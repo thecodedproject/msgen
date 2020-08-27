@@ -5,16 +5,17 @@ package rpc_server
 import(
 	"context"
 	"some/service/ops"
+	"some/service/state"
 	"some/service/servicepb"
 )
 
 type Server struct {
-	b ops.Backends
+	st state.State
 }
 
-func New(b ops.Backends) *Server {
+func New(st state.State) *Server {
 	return &Server{
-		b: b,
+		st: st,
 	}
 }
 
@@ -25,7 +26,7 @@ func (s *Server) Ping(
 
 	err := ops.Ping(
 		ctx,
-		s.b,
+		s.st,
 		req.Int64Value,
 		req.StringValue,
 	)
@@ -44,7 +45,7 @@ func (s *Server) Pong(
 
 	int64Value, stringValue, err := ops.Pong(
 		ctx,
-		s.b,
+		s.st,
 	)
 	if err != nil {
 		return nil, err

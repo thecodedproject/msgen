@@ -61,6 +61,7 @@ func GenerateBuffer(
 		Imports: []string{
 			"\"context\"",
 			"\"" + serviceRootImportPath + "/ops\"",
+			"\"" + serviceRootImportPath + "/state\"",
 			"\"" + serviceRootImportPath + "/" + i.ProtoPackage + "\"",
 		},
 		ServiceName: "SomeService",
@@ -68,7 +69,6 @@ func GenerateBuffer(
 	if err != nil {
 		return err
 	}
-
 
 	for _, method := range i.Methods {
 
@@ -114,12 +114,12 @@ import(
 )
 
 type Server struct {
-	b ops.Backends
+	st state.State
 }
 
-func New(b ops.Backends) *Server {
+func New(st state.State) *Server {
 	return &Server{
-		b: b,
+		st: st,
 	}
 }
 
@@ -132,7 +132,7 @@ var testMethodTmpl = `func (s *Server) {{ToCamel .Name}}(
 
 	{{range .ReturnArgs}}{{ToLowerCamel .Name}}, {{end}}err := ops.{{ToCamel .Name}}(
 		ctx,
-		s.b,
+		s.st,
 {{- range .Args}}
 		req.{{ToCamel .Name}},
 {{- end}}
