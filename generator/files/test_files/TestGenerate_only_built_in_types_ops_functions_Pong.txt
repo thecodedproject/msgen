@@ -2,11 +2,12 @@ package ops
 
 import(
 	"context"
+	"some/service/state"
 )
 
 func Pong(
 	ctx context.Context,
-	b Backends,
+	s state.State,
 ) (int64, string, error) {
 
 	return 0, "", nil

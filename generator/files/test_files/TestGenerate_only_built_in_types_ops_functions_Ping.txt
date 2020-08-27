@@ -2,11 +2,12 @@ package ops
 
 import(
 	"context"
+	"some/service/state"
 )
 
 func Ping(
 	ctx context.Context,
-	b Backends,
+	s state.State,
 	int64Value int64,
 	stringValue string,
 ) error {

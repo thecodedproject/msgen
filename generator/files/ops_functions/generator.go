@@ -74,6 +74,7 @@ func GenerateBufferForMethod(
 		Package: "ops",
 		Imports: []string{
 			"\"context\"",
+			"\"" + serviceRootImportPath + "/state\"",
 		},
 		ServiceName: "SomeService",
 	})
@@ -122,7 +123,7 @@ import(
 
 var methodTmpl = `func {{ToCamel .Name}}(
 	ctx context.Context,
-	b Backends,
+	s state.State,
 {{- range .Args}}
 	{{ToLowerCamel .Name}} {{.Type}},
 {{- end}}
