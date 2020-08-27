@@ -110,7 +110,7 @@ func (ts *clientSuite) TestPing() {
 		ts.T().Run(test.Name, func(t *testing.T) {
 
 			c := ts.createClient(
-				state.NewStateForTesting,
+				state.NewStateForTesting(
 					t,
 				),
 			)
@@ -145,7 +145,7 @@ func (ts *clientSuite) TestPong() {
 		ts.T().Run(test.Name, func(t *testing.T) {
 
 			c := ts.createClient(
-				state.NewStateForTesting,
+				state.NewStateForTesting(
 					t,
 				),
 			)

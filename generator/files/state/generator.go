@@ -22,32 +22,40 @@ func Generate(
 	outputDir string,
 ) error {
 
-	outputFile := path.Join(outputDir, stateFolder, stategenInputFile)
+	stateFile := path.Join(outputDir, stateFolder, stategenInputFile)
 
-	if exists, err := common.FileExists(outputFile); err != nil {
+	stateFileExists, err := common.FileExists(stateFile)
+	if err != nil {
 		return err
-	} else if exists {
+	}
+
+	if !stateFileExists {
+		writer, err := common.CreatePathAndOpen(stateFile)
+		if err != nil {
+			return err
+		}
+
+		err = GenerateBuffer(
+			serviceRootImportPath,
+			writer,
+		)
+		if err != nil {
+			return err
+		}
+	}
+
+	stateGenFile := path.Join(outputDir, stateFolder, stategenOutputFile)
+	stateGenFileExists, err := common.FileExists(stateGenFile)
+
+	if stateGenFileExists {
 		return nil
 	}
 
-	writer, err := common.CreatePathAndOpen(outputFile)
-	if err != nil {
-		return err
-	}
-
-	err = GenerateBuffer(
-		serviceRootImportPath,
-		writer,
-	)
-	if err != nil {
-		return err
-	}
-
 	return stategen.Generate(
-		stategenInputFile,
+		stateFile,
 		stategenInputStructName,
 		stategenOutputInterfaceName,
-		stategenOutputFile,
+		stateGenFile,
 	)
 }
 
@@ -70,7 +78,7 @@ func GenerateBuffer(
 		OutputInterface string
 		OutputFile string
 	}{
-		Package: "ops",
+		Package: stateFolder,
 		InputFile: stategenInputFile,
 		InputStruct: stategenInputStructName,
 		OutputInterface: stategenOutputInterfaceName,

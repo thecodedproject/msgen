@@ -215,7 +215,7 @@ var testMethodTmpl = `func (ts *clientSuite) Test{{ToCamel .Name}}() {
 		ts.T().Run(test.Name, func(t *testing.T) {
 
 			c := ts.createClient(
-				state.NewStateForTesting,
+				state.NewStateForTesting(
 					t,
 				),
 			)

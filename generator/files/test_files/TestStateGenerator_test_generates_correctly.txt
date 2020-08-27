@@ -1,4 +1,4 @@
-package ops
+package state
 
 //go:generate stategen --inputFile="state.go" --inputStruct="stateImpl" --outputInterface="State" --outputFile="state_gen.go"
 
