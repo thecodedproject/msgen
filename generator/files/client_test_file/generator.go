@@ -64,8 +64,8 @@ func GenerateBuffer(
 			"\"google.golang.org/grpc/connectivity\"",
 			"\"" + serviceRootImportPath + "\"",
 			"\"" + serviceRootImportPath + "/" + i.ProtoPackage + "\"",
-			"\"" + serviceRootImportPath + "/ops\"",
 			"\"" + serviceRootImportPath + "/rpc_server\"",
+			"\"" + serviceRootImportPath + "/state\"",
 			"logical_client \"" + serviceRootImportPath + "/client/logical\"",
 			"grpc_client \"" + serviceRootImportPath + "/client/grpc\"",
 			"\"testing\"",
@@ -122,30 +122,30 @@ import(
 {{- end}}
 )
 
-func setupGRPCServer(s *TestGRPCSuite, b ops.Backends) (string) {
+func setupGRPCServer(ts *TestGRPCSuite, s state.State) (string) {
 
 	listener, err := net.Listen("tcp", "localhost:0")
-	s.Require().NoError(err)
+	ts.Require().NoError(err)
 
 	grpcSrv := grpc.NewServer()
-	s.T().Cleanup(grpcSrv.GracefulStop)
+	ts.T().Cleanup(grpcSrv.GracefulStop)
 
-	{{ToLowerCamel .ServiceName}}Srv := rpc_server.New(b)
+	{{ToLowerCamel .ServiceName}}Srv := rpc_server.New(s)
 	{{ToLowerCamel .ServiceName}}pb.Register{{ToCamel .ServiceName}}Server(grpcSrv, {{ToLowerCamel .ServiceName}}Srv)
 
 	go func() {
 		err := grpcSrv.Serve(listener)
-		s.Require().NoError(err)
+		ts.Require().NoError(err)
 	}()
 
 	return listener.Addr().String()
 }
 
-func setupGRPCClient(s *TestGRPCSuite, b ops.Backends) {{ToLower .ServiceName}}.Client {
+func setupGRPCClient(ts *TestGRPCSuite, s state.State) {{ToLower .ServiceName}}.Client {
 
-	serverAddr := setupGRPCServer(s, b)
+	serverAddr := setupGRPCServer(ts, s)
 	conn, err := grpc.Dial(serverAddr, grpc.WithInsecure())
-	s.Require().NoError(err)
+	ts.Require().NoError(err)
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
@@ -160,7 +160,7 @@ func setupGRPCClient(s *TestGRPCSuite, b ops.Backends) {{ToLower .ServiceName}}.
 		}
 	}
 
-	client := grpc_client.NewForTesting(s.T(), conn)
+	client := grpc_client.NewForTesting(ts.T(), conn)
 	return client
 }
 
@@ -168,7 +168,7 @@ func setupGRPCClient(s *TestGRPCSuite, b ops.Backends) {{ToLower .ServiceName}}.
 type clientSuite struct {
 	suite.Suite
 
-	createClient func(b ops.Backends) {{ToLower .ServiceName}}.Client
+	createClient func(state.State) {{ToLower .ServiceName}}.Client
 }
 
 func TestLogical(t *testing.T) {
@@ -183,9 +183,9 @@ type TestLogicalSuite struct {
 	clientSuite
 }
 
-func (s *TestLogicalSuite) SetupTest() {
-	s.createClient = func(b ops.Backends) {{ToLower .ServiceName}}.Client {
-		return logical_client.New(b)
+func (ts *TestLogicalSuite) SetupTest() {
+	ts.createClient = func(s state.State) {{ToLower .ServiceName}}.Client {
+		return logical_client.New(s)
 	}
 }
 
@@ -193,15 +193,15 @@ type TestGRPCSuite struct {
 	clientSuite
 }
 
-func (s *TestGRPCSuite) SetupTest() {
-	s.createClient = func(b ops.Backends) {{ToLower .ServiceName}}.Client {
-		return setupGRPCClient(s, b)
+func (ts *TestGRPCSuite) SetupTest() {
+	ts.createClient = func(s state.State) {{ToLower .ServiceName}}.Client {
+		return setupGRPCClient(ts, s)
 	}
 }
 
 `
 
-var testMethodTmpl = `func (s *clientSuite) Test{{ToCamel .Name}}() {
+var testMethodTmpl = `func (ts *clientSuite) Test{{ToCamel .Name}}() {
 
 	testCases := []struct{
 		Name string
@@ -212,10 +212,10 @@ var testMethodTmpl = `func (s *clientSuite) Test{{ToCamel .Name}}() {
 	}
 
 	for _, test := range testCases {
-		s.T().Run(test.Name, func(t *testing.T) {
+		ts.T().Run(test.Name, func(t *testing.T) {
 
-			c := s.createClient(
-				ops.NewBackendsForTesting(
+			c := ts.createClient(
+				state.NewStateForTesting,
 					t,
 				),
 			)
@@ -231,9 +231,9 @@ var testMethodTmpl = `func (s *clientSuite) Test{{ToCamel .Name}}() {
 				{{ToLowerCamel .Name}},
 {{- end}}
 			)
-			s.Require().NoError(err)
+			ts.Require().NoError(err)
 
-			s.Assert().Fail("TODO: Implement test for client.{{ToCamel .Name}}")
+			ts.Assert().Fail("TODO: Implement test for client.{{ToCamel .Name}}")
 		})
 	}
 }

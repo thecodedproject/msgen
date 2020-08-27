@@ -9,8 +9,8 @@ import(
 	"google.golang.org/grpc/connectivity"
 	"some/service"
 	"some/service/servicepb"
-	"some/service/ops"
 	"some/service/rpc_server"
+	"some/service/state"
 	logical_client "some/service/client/logical"
 	grpc_client "some/service/client/grpc"
 	"testing"
@@ -19,30 +19,30 @@ import(
 	"log"
 )
 
-func setupGRPCServer(s *TestGRPCSuite, b ops.Backends) (string) {
+func setupGRPCServer(ts *TestGRPCSuite, s state.State) (string) {
 
 	listener, err := net.Listen("tcp", "localhost:0")
-	s.Require().NoError(err)
+	ts.Require().NoError(err)
 
 	grpcSrv := grpc.NewServer()
-	s.T().Cleanup(grpcSrv.GracefulStop)
+	ts.T().Cleanup(grpcSrv.GracefulStop)
 
-	serviceSrv := rpc_server.New(b)
+	serviceSrv := rpc_server.New(s)
 	servicepb.RegisterServiceServer(grpcSrv, serviceSrv)
 
 	go func() {
 		err := grpcSrv.Serve(listener)
-		s.Require().NoError(err)
+		ts.Require().NoError(err)
 	}()
 
 	return listener.Addr().String()
 }
 
-func setupGRPCClient(s *TestGRPCSuite, b ops.Backends) service.Client {
+func setupGRPCClient(ts *TestGRPCSuite, s state.State) service.Client {
 
-	serverAddr := setupGRPCServer(s, b)
+	serverAddr := setupGRPCServer(ts, s)
 	conn, err := grpc.Dial(serverAddr, grpc.WithInsecure())
-	s.Require().NoError(err)
+	ts.Require().NoError(err)
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
@@ -57,7 +57,7 @@ func setupGRPCClient(s *TestGRPCSuite, b ops.Backends) service.Client {
 		}
 	}
 
-	client := grpc_client.NewForTesting(s.T(), conn)
+	client := grpc_client.NewForTesting(ts.T(), conn)
 	return client
 }
 
@@ -65,7 +65,7 @@ func setupGRPCClient(s *TestGRPCSuite, b ops.Backends) service.Client {
 type clientSuite struct {
 	suite.Suite
 
-	createClient func(b ops.Backends) service.Client
+	createClient func(state.State) service.Client
 }
 
 func TestLogical(t *testing.T) {
@@ -80,9 +80,9 @@ type TestLogicalSuite struct {
 	clientSuite
 }
 
-func (s *TestLogicalSuite) SetupTest() {
-	s.createClient = func(b ops.Backends) service.Client {
-		return logical_client.New(b)
+func (ts *TestLogicalSuite) SetupTest() {
+	ts.createClient = func(s state.State) service.Client {
+		return logical_client.New(s)
 	}
 }
 
@@ -90,13 +90,13 @@ type TestGRPCSuite struct {
 	clientSuite
 }
 
-func (s *TestGRPCSuite) SetupTest() {
-	s.createClient = func(b ops.Backends) service.Client {
-		return setupGRPCClient(s, b)
+func (ts *TestGRPCSuite) SetupTest() {
+	ts.createClient = func(s state.State) service.Client {
+		return setupGRPCClient(ts, s)
 	}
 }
 
-func (s *clientSuite) TestPing() {
+func (ts *clientSuite) TestPing() {
 
 	testCases := []struct{
 		Name string
@@ -107,10 +107,10 @@ func (s *clientSuite) TestPing() {
 	}
 
 	for _, test := range testCases {
-		s.T().Run(test.Name, func(t *testing.T) {
+		ts.T().Run(test.Name, func(t *testing.T) {
 
-			c := s.createClient(
-				ops.NewBackendsForTesting(
+			c := ts.createClient(
+				state.NewStateForTesting,
 					t,
 				),
 			)
@@ -124,14 +124,14 @@ func (s *clientSuite) TestPing() {
 				int64Value,
 				stringValue,
 			)
-			s.Require().NoError(err)
+			ts.Require().NoError(err)
 
-			s.Assert().Fail("TODO: Implement test for client.Ping")
+			ts.Assert().Fail("TODO: Implement test for client.Ping")
 		})
 	}
 }
 
-func (s *clientSuite) TestPong() {
+func (ts *clientSuite) TestPong() {
 
 	testCases := []struct{
 		Name string
@@ -142,10 +142,10 @@ func (s *clientSuite) TestPong() {
 	}
 
 	for _, test := range testCases {
-		s.T().Run(test.Name, func(t *testing.T) {
+		ts.T().Run(test.Name, func(t *testing.T) {
 
-			c := s.createClient(
-				ops.NewBackendsForTesting(
+			c := ts.createClient(
+				state.NewStateForTesting,
 					t,
 				),
 			)
@@ -155,9 +155,9 @@ func (s *clientSuite) TestPong() {
 			_, _, err = c.Pong(
 				ctx,
 			)
-			s.Require().NoError(err)
+			ts.Require().NoError(err)
 
-			s.Assert().Fail("TODO: Implement test for client.Pong")
+			ts.Assert().Fail("TODO: Implement test for client.Pong")
 		})
 	}
 }
