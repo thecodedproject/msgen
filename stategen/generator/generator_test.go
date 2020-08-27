@@ -52,13 +52,13 @@ func TestGenerator(t *testing.T) {
 	for _, test := range testCases {
 		t.Run(test.Name, func(t *testing.T) {
 
-				buffer := bytes.NewBuffer(nil)
+				var buffer bytes.Buffer
 
-				err := generator.Generate(
+				err := generator.GenerateBuffer(
 					test.InputFile,
 					test.InputStructName,
 					test.OutputInterfaceName,
-					buffer,
+					&buffer,
 				)
 				require.NoError(t, err)
 
