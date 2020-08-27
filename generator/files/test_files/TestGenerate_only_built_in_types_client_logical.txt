@@ -5,16 +5,17 @@ package logical
 import(
 	"context"
 	"some/service/ops"
+	"some/service/state"
 )
 
 type client struct {
-	backends ops.Backends
+	s state.State
 }
 
-func New(b ops.Backends) *client {
+func New(s state.State) *client {
 
 	return &client{
-		backends: b,
+		s: s,
 	}
 }
 
@@ -26,7 +27,7 @@ func (c *client) Ping(
 
 	return ops.Ping(
 		ctx,
-		c.backends,
+		c.s,
 		int64Value,
 		stringValue,
 	)
@@ -38,7 +39,7 @@ func (c *client) Pong(
 
 	return ops.Pong(
 		ctx,
-		c.backends,
+		c.s,
 	)
 }
 

@@ -59,6 +59,7 @@ func GenerateBuffer(
 		Imports: []string{
 			"context",
 			serviceRootImportPath + "/ops",
+			serviceRootImportPath + "/state",
 		},
 	})
 	if err != nil {
@@ -114,13 +115,13 @@ import(
 )
 
 type client struct {
-	backends ops.Backends
+	s state.State
 }
 
-func New(b ops.Backends) *client {
+func New(s state.State) *client {
 
 	return &client{
-		backends: b,
+		s: s,
 	}
 }
 
@@ -135,7 +136,7 @@ var logicalMethodTmpl = `func (c *client) {{.Name}}(
 
 	return ops.{{.Name}}(
 		ctx,
-		c.backends,
+		c.s,
 {{- range .Args}}
 		{{ToLowerCamel .Name}},
 {{- end}}
