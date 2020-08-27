@@ -28,3 +28,14 @@ func ServiceNameFromRootImportPath(rootImportPath string) string {
 	_, serviceName := path.Split(rootImportPath)
 	return serviceName
 }
+
+func FileExists(filepath string) (bool, error) {
+
+	if _, err := os.Stat(filepath); os.IsNotExist(err) {
+		return false, nil
+	} else if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}

@@ -1,15 +1,15 @@
 package files
 
 import(
+	"github.com/pkg/errors"
 	"github.com/thecodedproject/msgen/generator/files/api"
 	"github.com/thecodedproject/msgen/generator/files/client_grpc"
 	"github.com/thecodedproject/msgen/generator/files/client_logical"
 	"github.com/thecodedproject/msgen/generator/files/client_test_file"
-	"github.com/thecodedproject/msgen/generator/files/ops_backends"
 	"github.com/thecodedproject/msgen/generator/files/ops_functions"
 	"github.com/thecodedproject/msgen/generator/files/rpc_server"
+	"github.com/thecodedproject/msgen/generator/files/state"
 	"github.com/thecodedproject/msgen/parser"
-	"github.com/pkg/errors"
 )
 
 func Generate(
@@ -54,14 +54,6 @@ func Generate(
 		return errors.Wrap(err, "client_test_file.Generate")
 	}
 
-	err = ops_backends.Generate(
-		serviceRootImportPath,
-		outputDir,
-	)
-	if err != nil {
-		return errors.Wrap(err, "ops_backends.Generate")
-	}
-
 	err = ops_functions.Generate(
 		serviceRootImportPath,
 		i,
@@ -78,6 +70,14 @@ func Generate(
 	)
 	if err != nil {
 		return errors.Wrap(err, "rpc_server.Generate")
+	}
+
+	err = state.Generate(
+		serviceRootImportPath,
+		outputDir,
+	)
+	if err != nil {
+		return errors.Wrap(err, "state.Generate")
 	}
 
 	return nil

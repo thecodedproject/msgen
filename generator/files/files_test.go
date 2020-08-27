@@ -11,6 +11,7 @@ import(
 	"github.com/thecodedproject/msgen/generator/files/client_test_file"
 	"github.com/thecodedproject/msgen/generator/files/ops_functions"
 	"github.com/thecodedproject/msgen/generator/files/rpc_server"
+	"github.com/thecodedproject/msgen/generator/files/state"
 	"github.com/thecodedproject/msgen/parser"
 	"io"
 	"io/ioutil"
@@ -269,4 +270,47 @@ func TestMultiFileGenerators(t *testing.T) {
 			}
 		}
 	}
+}
+
+func TestStateGenerator(t *testing.T) {
+
+	testCases := []struct{
+		Name string
+		ServiceRootImportPath string
+		ExpectedFile string
+	}{
+		{
+			Name: "Test generates correctly",
+			ServiceRootImportPath: "a/b/c",
+			ExpectedFile: "./test_files/TestStateGenerator_test_generates_correctly.txt",
+		},
+	}
+
+	for _, test := range testCases {
+		t.Run(test.Name, func(t *testing.T) {
+
+			buffer := bytes.NewBuffer(nil)
+
+			err := state.GenerateBuffer(
+				test.ServiceRootImportPath,
+				buffer,
+			)
+			require.NoError(t, err)
+
+			if *fix {
+				outFile, err := os.Create(test.ExpectedFile)
+				require.NoError(t, err)
+				defer outFile.Close()
+
+				outFile.Write(buffer.Bytes())
+				return
+			}
+
+			expectedBuffer, err := ioutil.ReadFile(test.ExpectedFile)
+			require.NoError(t, err)
+
+			assert.Equal(t, string(expectedBuffer), buffer.String())
+		})
+	}
+
 }
