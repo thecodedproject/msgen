@@ -33,6 +33,9 @@ func Generate(
 
 	sortImports(stateInfo.Imports)
 
+	stateInfo.InputStructName = inputStructName
+	stateInfo.OutputInterfaceName = outputInterfaceName
+
 	t, err := common.BaseTemplate().Parse(backendsTmpl)
 	if err != nil {
 		return err
@@ -55,6 +58,8 @@ type StateInfo struct {
 	PackageName string
 	Fields []Field
 	Imports []Import
+	InputStructName string
+	OutputInterfaceName string
 }
 
 func parseInputFile(
@@ -188,7 +193,11 @@ func sortImports(imports []Import) {
 	})
 }
 
-var backendsTmpl = `package state
+var backendsTmpl = `
+{{- $inputStructName := ToLowerCamel .InputStructName -}}
+{{- $optionTypeName := print (ToLowerCamel .OutputInterfaceName) "Option" -}}
+
+package {{.PackageName}}
 
 imports(
 {{- range .Imports}}
@@ -196,7 +205,7 @@ imports(
 {{- end}}
 )
 
-type State interface {
+type {{ToCamel .OutputInterfaceName}} interface {
 {{- range .Fields}}
 	Get{{ToCamel .Name}}() {{.Type}}
 {{- end}}
@@ -204,20 +213,20 @@ type State interface {
 
 {{- range .Fields}}
 
-func (s *stateImpl) Get{{ToCamel .Name}}() {{.Type}} {
+func (s *{{$inputStructName}}) Get{{ToCamel .Name}}() {{.Type}} {
 
 	return s.{{ToLowerCamel .Name}}
 }
 {{- end}}
 
-type stateOption func(*stateImpl)
+type {{$optionTypeName}} func(*{{$inputStructName}})
 
-func NewStateForTesting(
+func New{{ToCamel .OutputInterfaceName}}ForTesting(
 	_ testing.TB,
-	opts ...stateOption,
-) *State {
+	opts ...{{$optionTypeName}},
+) *{{ToCamel .OutputInterfaceName}} {
 
-	var s State
+	var s {{ToCamel .OutputInterfaceName}}
 	for _, opt := range opts {
 		opt(&s)
 	}
@@ -226,9 +235,9 @@ func NewStateForTesting(
 
 {{- range .Fields}}
 
-func With{{ToCamel .Name}}({{ToLowerCamel .Name}} {{.Type}}) stateOption {
+func With{{ToCamel .Name}}({{ToLowerCamel .Name}} {{.Type}}) {{$optionTypeName}} {
 
-	return func(s *stateImpl) {
+	return func(s *{{$inputStructName}}) {
 		s.{{ToLowerCamel .Name}} = {{ToLowerCamel .Name}}
 	}
 }

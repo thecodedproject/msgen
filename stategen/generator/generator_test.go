@@ -40,6 +40,13 @@ func TestGenerator(t *testing.T) {
 			InputFile: "./test_files/test_generator_state_struct_with_multiple_members_and_new_method.in",
 			ExpectedOutputFile: "./test_files/test_generator_state_struct_with_multiple_members_and_new_method.out",
 		},
+		{
+			Name: "Input struct with aliased imports",
+			InputStructName: "stateImpl",
+			OutputInterfaceName: "State",
+			InputFile: "./test_files/test_generator_input_struct_with_aliased_imports.in",
+			ExpectedOutputFile: "./test_files/test_generator_input_struct_with_aliased_imports.out",
+		},
 	}
 
 	for _, test := range testCases {

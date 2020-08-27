@@ -14,9 +14,9 @@ func NewOutputInterfaceForTesting(
 	opts ...outputInterfaceOption,
 ) *OutputInterface {
 
-	var o OutputInterface
+	var s OutputInterface
 	for _, opt := range opts {
-		opt(&o)
+		opt(&s)
 	}
-	return &o
+	return &s
 }
