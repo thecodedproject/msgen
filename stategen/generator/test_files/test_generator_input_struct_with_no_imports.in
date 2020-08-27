@@ -1,0 +1,26 @@
+package noImportsPackage
+
+import(
+)
+
+type NoImportsStruct struct {
+	addClient AddClient
+	subtractClient SubtractClient
+}
+
+func New() *NoImportsStruct {
+
+	var s NoImportsStruct
+
+	s.addClient, err = MakeAdd()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	s.subtractClient, err = MakeSubtract()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return &s
+}

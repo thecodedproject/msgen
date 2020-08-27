@@ -116,6 +116,10 @@ func parseInputFile(
 			info.Imports = append(info.Imports, i)
 
 		case *ast.GenDecl:
+			if len(n.Specs) == 0 {
+				return true
+			}
+
 			switch s := n.Specs[0].(type) {
 			case *ast.TypeSpec:
 				if s.Name.Name == inputStructName {
@@ -136,11 +140,8 @@ func parseInputFile(
 									Name: f.Names[0].Name,
 									Type: string(src[f.Type.Pos()-1:f.Type.End()-1]),
 								})
-
 							}
-
 						}
-
 
 					default:
 						inspectErr = errors.New("input type is not struct type")
