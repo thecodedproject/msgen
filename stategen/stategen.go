@@ -9,7 +9,7 @@ import(
 
 var inputFile = flag.String("inputFile", "./state.go", "Input file containing input struct")
 var inputStructName = flag.String("inputStruct", "stateImpl", "Name of input struct")
-var outputInterfaceName = flag.String("outputInterface", "State", "Name of output interface")
+var outputInterfaceNameCmd = flag.String("outputInterface", "", "Name of output interface (Or do not generate interface if not set)")
 var outputFile = flag.String("outputFile", "./state_gen.go", "Output file to write output interface to")
 
 func main() {
@@ -18,10 +18,15 @@ func main() {
 
 	CheckInputFileExists(*inputFile)
 
+	var outputInterfaceName *string
+	if *outputInterfaceNameCmd != "" {
+		outputInterfaceName = outputInterfaceNameCmd
+	}
+
 	err := generator.Generate(
 		*inputFile,
 		*inputStructName,
-		*outputInterfaceName,
+		outputInterfaceName,
 		*outputFile,
 	)
 	if err != nil {

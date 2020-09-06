@@ -1,0 +1,26 @@
+package noInterfacePackage
+
+import(
+)
+
+type NoInterfaceStruct struct {
+	addClient AddClient
+	subtractClient SubtractClient
+}
+
+func New() *NoInterfaceStruct {
+
+	var s NoInterfaceStruct
+
+	s.addClient, err = MakeAdd()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	s.subtractClient, err = MakeSubtract()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return &s
+}

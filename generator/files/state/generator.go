@@ -51,10 +51,11 @@ func Generate(
 		return nil
 	}
 
+	outputInterface := stategenOutputInterfaceName
 	return stategen.Generate(
 		stateFile,
 		stategenInputStructName,
-		stategenOutputInterfaceName,
+		&outputInterface,
 		stateGenFile,
 	)
 }

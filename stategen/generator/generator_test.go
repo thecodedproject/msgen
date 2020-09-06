@@ -23,6 +23,7 @@ func TestGenerator(t *testing.T) {
 		Name string
 		InputStructName string
 		OutputInterfaceName string
+		DontGeneratedOutputInterface bool
 		InputFile string
 		ExpectedOutputFile string
 	}{
@@ -54,6 +55,13 @@ func TestGenerator(t *testing.T) {
 			InputFile: "./test_files/test_generator_input_struct_with_no_imports.in",
 			ExpectedOutputFile: "./test_files/test_generator_input_struct_with_no_imports.out",
 		},
+		{
+			Name: "NotGeneratingOutputInterface",
+			InputStructName: "NoInterfaceStruct",
+			DontGeneratedOutputInterface: true,
+			InputFile: "./test_files/test_generator_not_generating_output_interface.in",
+			ExpectedOutputFile: "./test_files/test_generator_not_generating_output_interface.out",
+		},
 	}
 
 	for _, test := range testCases {
@@ -61,10 +69,15 @@ func TestGenerator(t *testing.T) {
 
 				var buffer bytes.Buffer
 
+				var outputInterfaceName *string
+				if !test.DontGeneratedOutputInterface {
+					outputInterfaceName = &test.OutputInterfaceName
+				}
+
 				err := generator.GenerateBuffer(
 					test.InputFile,
 					test.InputStructName,
-					test.OutputInterfaceName,
+					outputInterfaceName,
 					&buffer,
 				)
 				require.NoError(t, err)

@@ -15,7 +15,7 @@ import(
 func Generate(
 	inputFile string,
 	inputStructName string,
-	outputInterfaceName string,
+	outputInterfaceName *string,
 	outputFile string,
 ) error {
 
@@ -35,7 +35,7 @@ func Generate(
 func GenerateBuffer(
 	inputFile string,
 	inputStructName string,
-	outputInterfaceName string,
+	outputInterfaceName *string,
 	writer io.Writer,
 ) error {
 
@@ -54,7 +54,16 @@ func GenerateBuffer(
 	sortImports(stateInfo.Imports)
 
 	stateInfo.InputStructName = inputStructName
-	stateInfo.OutputInterfaceName = outputInterfaceName
+	if outputInterfaceName != nil {
+		stateInfo.OutputInterfaceName = *outputInterfaceName
+		stateInfo.OptionTypeName = *outputInterfaceName + "Option"
+		stateInfo.TestingTypeName = *outputInterfaceName
+		stateInfo.TestingType = *outputInterfaceName
+	} else {
+		stateInfo.OptionTypeName = inputStructName + "Option"
+		stateInfo.TestingTypeName = inputStructName
+		stateInfo.TestingType = "*" + inputStructName
+	}
 
 	t, err := common.BaseTemplate().Parse(backendsTmpl)
 	if err != nil {
@@ -80,6 +89,9 @@ type StateInfo struct {
 	Imports []Import
 	InputStructName string
 	OutputInterfaceName string
+	OptionTypeName string
+	TestingTypeName string
+	TestingType string
 }
 
 func parseInputFile(
@@ -216,7 +228,7 @@ func sortImports(imports []Import) {
 
 var backendsTmpl = `
 {{- $inputStructName := .InputStructName -}}
-{{- $optionTypeName := print (ToLowerCamel .OutputInterfaceName) "Option" -}}
+{{- $optionTypeName := print (ToLowerCamel .OptionTypeName) -}}
 
 package {{.PackageName}}
 
@@ -228,11 +240,13 @@ import(
 {{- end}}
 )
 
+{{- if ne .OutputInterfaceName ""}}
+
 type {{.OutputInterfaceName}} interface {
 {{- range .Fields}}
 	Get{{ToCamel .Name}}() {{.Type}}
 {{- end}}
-}
+}{{end}}
 
 {{- range .Fields}}
 
@@ -244,10 +258,10 @@ func (s *{{$inputStructName}}) Get{{ToCamel .Name}}() {{.Type}} {
 
 type {{$optionTypeName}} func(*{{$inputStructName}})
 
-func New{{.OutputInterfaceName}}ForTesting(
+func New{{ToCamel .TestingTypeName}}ForTesting(
 	_ testing.TB,
 	opts ...{{$optionTypeName}},
-) {{.OutputInterfaceName}} {
+) {{.TestingType}} {
 
 	var s {{$inputStructName}}
 	for _, opt := range opts {
