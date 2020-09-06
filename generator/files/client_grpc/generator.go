@@ -2,8 +2,8 @@ package client_grpc
 
 import(
 	"github.com/thecodedproject/msgen/generator/files/common"
-	"github.com/thecodedproject/msgen/generator/files/proto_helpers"
 	"github.com/thecodedproject/msgen/parser"
+	"github.com/thecodedproject/msgen/parser/proto_helpers"
 	"io"
 	"path"
 )

@@ -23,4 +23,5 @@ type Message struct {
 type Field struct {
 	Name string
 	Type string
+	IsNestedMessage bool
 }

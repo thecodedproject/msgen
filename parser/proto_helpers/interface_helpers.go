@@ -145,3 +145,15 @@ func NestedMessages(
 	return nestedMessages
 }
 
+func IsMessage(
+	i parser.ProtoInterface,
+	name string,
+) bool {
+
+	for _, m := range i.Messages {
+		if m.Name == name {
+			return true
+		}
+	}
+	return false
+}

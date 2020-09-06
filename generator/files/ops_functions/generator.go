@@ -3,8 +3,8 @@ package ops_functions
 import(
 	"github.com/iancoleman/strcase"
 	"github.com/thecodedproject/msgen/generator/files/common"
-	"github.com/thecodedproject/msgen/generator/files/proto_helpers"
 	"github.com/thecodedproject/msgen/parser"
+	"github.com/thecodedproject/msgen/parser/proto_helpers"
 	"io"
 	"path"
 )

@@ -4,7 +4,7 @@ import(
 	"flag"
 	"github.com/thecodedproject/msgen/generator/files"
 	"github.com/thecodedproject/msgen/generator/files/common"
-	"github.com/thecodedproject/msgen/parser"
+	parser_methods "github.com/thecodedproject/msgen/parser/methods"
 	"log"
 	"os"
 	"path"
@@ -23,7 +23,7 @@ func main() {
 
 	protoPath := GetProtoPathAndCheckExists(*msDir, *rootImportPath)
 
-	iProto, err := parser.Parse(protoPath)
+	iProto, err := parser_methods.Parse(protoPath)
 	if err != nil {
 		log.Fatal("Parse error:", err.Error())
 	}

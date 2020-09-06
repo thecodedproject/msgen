@@ -5,6 +5,7 @@ import(
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/thecodedproject/msgen/parser"
+	"github.com/thecodedproject/msgen/parser/methods"
 )
 
 func TestParse(t *testing.T) {
@@ -88,6 +89,7 @@ func TestParse(t *testing.T) {
 							{
 								Name: "some_nested_value",
 								Type: "NestedVal",
+								IsNestedMessage: true,
 							},
 						},
 					},
@@ -97,6 +99,7 @@ func TestParse(t *testing.T) {
 							{
 								Name: "some_other_value",
 								Type: "OtherNestedVal",
+								IsNestedMessage: true,
 							},
 						},
 					},
@@ -126,7 +129,7 @@ func TestParse(t *testing.T) {
 	for _, test := range testCases {
 		t.Run(test.Name, func(t *testing.T) {
 
-			i, err := parser.Parse(test.ProtoFile)
+			i, err := methods.Parse(test.ProtoFile)
 			require.NoError(t, err)
 
 			assert.Equal(t, test.Expected, i)
