@@ -10,9 +10,12 @@ import(
 func BaseTemplate() *template.Template {
 
 	return template.New("").Funcs(map[string]interface{}{
-		"FuncArgs": funcArgumentSignature(false, false),
-		"FuncArgsWithCtx": funcArgumentSignature(true, false),
-		"FuncArgsWithCtxAndState": funcArgumentSignature(true, true),
+		"FuncArgs": funcArgumentSignature(false, false, false),
+		"FuncArgsWithCtx": funcArgumentSignature(false, true, false),
+		"FuncArgsWithCtxAndState": funcArgumentSignature(false, true, true),
+		"SplitFuncArgs": funcArgumentSignature(true, false, false),
+		"SplitFuncArgsWithCtx": funcArgumentSignature(true, true, false),
+		"SplitFuncArgsWithCtxAndState": funcArgumentSignature(true, true, true),
 
 		"FuncRetVals": funcReturnSignature(false, false),
 		"FuncRetValsWithError": funcReturnSignature(false, true),
@@ -39,7 +42,7 @@ var defaultReturnValues = map[string]string{
 	"string": "\"\"",
 }
 
-func funcArgumentSignature(withContext, withState bool) func([]parser.Field) string {
+func funcArgumentSignature(splitLines, withContext, withState bool) func([]parser.Field) string {
 
 	return func(args []parser.Field) string {
 
@@ -57,11 +60,20 @@ func funcArgumentSignature(withContext, withState bool) func([]parser.Field) str
 				argType = "*" + argType
 			}
 
+			if splitLines {
+				argSig += "\n\t"
+			}
+
 			argSig += strcase.ToLowerCamel(f.Name) + " " + argType
 
-			if i != len(args)-1 {
+			if splitLines {
+				argSig += ","
+			} else if i != len(args)-1 {
 				argSig += ", "
 			}
+		}
+		if splitLines {
+				argSig += "\n"
 		}
 		argSig += ")"
 

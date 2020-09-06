@@ -21,8 +21,8 @@ func New(s state.State) *client {
 
 func (c *client) Ping(
 	ctx context.Context,
-	someNestedValue NestedVal,
-) (OtherNestedVal, error) {
+	someNestedValue *NestedVal,
+) (*OtherNestedVal, error) {
 
 	return ops.Ping(
 		ctx,

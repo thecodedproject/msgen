@@ -127,12 +127,9 @@ func New(s state.State) *client {
 
 `
 
-var logicalMethodTmpl = `func (c *client) {{.Name}}(
-	ctx context.Context,
-{{- range .Args}}
-	{{ToLowerCamel .Name}} {{.Type}},
-{{- end}}
-) {{FuncRetVals .ReturnArgs}} {
+
+
+var logicalMethodTmpl = `func (c *client) {{.Name}}{{SplitFuncArgsWithCtx .Args}} {{FuncRetVals .ReturnArgs}} {
 
 	return ops.{{.Name}}(
 		ctx,
@@ -144,3 +141,4 @@ var logicalMethodTmpl = `func (c *client) {{.Name}}(
 }
 
 `
+

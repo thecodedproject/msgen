@@ -57,8 +57,8 @@ func NewForTesting(t *testing.T, conn *grpc.ClientConn) *client {
 
 func (c *client) Ping(
 	ctx context.Context,
-	someNestedValue NestedVal,
-) (resSomeOtherValue OtherNestedVal, err error) {
+	someNestedValue *NestedVal,
+) (resSomeOtherValue *OtherNestedVal, err error) {
 
 	res, err := c.rpcClient.Ping(
 		ctx,
