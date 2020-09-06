@@ -10,6 +10,10 @@ import(
 func BaseTemplate() *template.Template {
 
 	return template.New("").Funcs(map[string]interface{}{
+		"FuncArgs": funcArgumentSignature(false, false),
+		"FuncArgsWithCtx": funcArgumentSignature(true, false),
+		"FuncArgsWithCtxAndState": funcArgumentSignature(true, true),
+
 		"FuncRetVals": funcReturnSignature(false, false),
 		"FuncRetValsWithError": funcReturnSignature(false, true),
 		"NamedFuncRetVals": funcReturnSignature(true, false),
@@ -35,6 +39,36 @@ var defaultReturnValues = map[string]string{
 	"string": "\"\"",
 }
 
+func funcArgumentSignature(withContext, withState bool) func([]parser.Field) string {
+
+	return func(args []parser.Field) string {
+
+		if withState {
+			args = append([]parser.Field{{Name: "s", Type: "state.State"}}, args...)
+		}
+		if withContext {
+			args = append([]parser.Field{{Name: "ctx", Type: "context.Context"}}, args...)
+		}
+
+		argSig := "("
+		for i, f := range args {
+			argType := f.Type
+			if f.IsNestedMessage {
+				argType = "*" + argType
+			}
+
+			argSig += strcase.ToLowerCamel(f.Name) + " " + argType
+
+			if i != len(args)-1 {
+				argSig += ", "
+			}
+		}
+		argSig += ")"
+
+		return argSig
+	}
+}
+
 func funcReturnSignature(namedReturnVariables, addError bool) func([]parser.Field) string {
 
 	return func(returnArgs []parser.Field) string {
@@ -58,10 +92,16 @@ func funcReturnSignature(namedReturnVariables, addError bool) func([]parser.Fiel
 		}
 
 		for i := range returnArgs {
+
+			returnType := returnArgs[i].Type
+			if returnArgs[i].IsNestedMessage {
+				returnType = "*" + returnType
+			}
+
 			if namedReturnVariables {
-				retSignature += strcase.ToLowerCamel("res_" + returnArgs[i].Name) + " " + returnArgs[i].Type
+				retSignature += strcase.ToLowerCamel("res_" + returnArgs[i].Name) + " " + returnType
 			} else {
-				retSignature += returnArgs[i].Type
+				retSignature += returnType
 			}
 
 			if i != len(returnArgs)-1 {

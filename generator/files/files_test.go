@@ -146,6 +146,7 @@ func TestSingleFileGenerators(t *testing.T) {
 							{
 								Name: "some_nested_value",
 								Type: "NestedVal",
+								IsNestedMessage: true,
 							},
 						},
 					},
@@ -155,6 +156,7 @@ func TestSingleFileGenerators(t *testing.T) {
 							{
 								Name: "some_other_value",
 								Type: "OtherNestedVal",
+								IsNestedMessage: true,
 							},
 						},
 					},

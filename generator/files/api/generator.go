@@ -86,8 +86,6 @@ func getAllMethods(i parser.ProtoInterface) ([]Method, error) {
 			return nil, err
 		}
 
-		args = append([]parser.Field{{Name: "ctx", Type: "context.Context"}}, args...)
-
 		returnArgs, err := proto_helpers.MethodResponseFields(i, iMethod.Name)
 		if err != nil {
 			return nil, err
@@ -115,7 +113,7 @@ import(
 
 type Client interface {
 {{- range .Methods}}
-	{{ToCamel .Name}}({{range $index, $elem := .Args}}{{if $index}}, {{end}}{{ToLowerCamel .Name}} {{.Type}}{{end}}) {{FuncRetValsWithError .ReturnArgs}}
+	{{ToCamel .Name}}{{FuncArgsWithCtx .Args}} {{FuncRetValsWithError .ReturnArgs}}
 {{- end}}
 }
 
