@@ -15,8 +15,8 @@ func TestParse(t *testing.T) {
 		Expected parser.ProtoInterface
 	}{
 		{
-			Name: "some",
-			ProtoFile: "./example_proto/TestParse_some.proto",
+			Name: "Two different methods",
+			ProtoFile: "./example_proto/TestParse_two_different_methods.proto",
 			Expected: parser.ProtoInterface{
 				ProtoPackage: "examplepb",
 				ServiceName: "Some",
@@ -61,6 +61,59 @@ func TestParse(t *testing.T) {
 							},
 							{
 								Name: "string_value",
+								Type: "string",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			Name: "Nested messages",
+			ProtoFile: "./example_proto/TestParse_nested_messages.proto",
+			Expected: parser.ProtoInterface{
+				ProtoPackage: "nestedpb",
+				ServiceName: "NestedService",
+				Methods: []parser.Method{
+					{
+						Name: "Ping",
+						RequestMessage: "PingRequest",
+						ResponseMessage: "PingResponse",
+					},
+				},
+				Messages: []parser.Message{
+					{
+						Name: "PingRequest",
+						Fields: []parser.Field{
+							{
+								Name: "some_nested_value",
+								Type: "NestedVal",
+							},
+						},
+					},
+					{
+						Name: "PingResponse",
+						Fields: []parser.Field{
+							{
+								Name: "some_other_value",
+								Type: "OtherNestedVal",
+							},
+						},
+					},
+					{
+						Name: "NestedVal",
+						Fields: []parser.Field{
+							{
+								Name: "some_value",
+								Type: "int64",
+							},
+						},
+					},
+					{
+						Name: "OtherNestedVal",
+						Fields: []parser.Field{
+							{
+								Name: "some_string",
 								Type: "string",
 							},
 						},

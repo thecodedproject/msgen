@@ -125,3 +125,23 @@ func FieldTypes(fields []parser.Field) []string {
 	}
 	return types
 }
+
+// NestedMessages returns all of the messages that are
+// nested within any other message in the proto interface
+func NestedMessages(
+	i parser.ProtoInterface,
+) []parser.Message {
+
+	nestedMessages := make([]parser.Message, 0)
+	for _, m := range i.Messages {
+		for _, f := range m.Fields {
+			nestedMessage, err := Message(i, f.Type)
+			if err != nil {
+				continue // Not a nested type
+			}
+			nestedMessages = append(nestedMessages, nestedMessage)
+		}
+	}
+	return nestedMessages
+}
+

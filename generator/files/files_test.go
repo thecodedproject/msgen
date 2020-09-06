@@ -12,6 +12,7 @@ import(
 	"github.com/thecodedproject/msgen/generator/files/ops_functions"
 	"github.com/thecodedproject/msgen/generator/files/rpc_server"
 	"github.com/thecodedproject/msgen/generator/files/state"
+	"github.com/thecodedproject/msgen/generator/files/types"
 	"github.com/thecodedproject/msgen/parser"
 	"io"
 	"io/ioutil"
@@ -56,6 +57,11 @@ func TestSingleFileGenerators(t *testing.T) {
 			Name: "Rpc Server",
 			Function: rpc_server.GenerateBuffer,
 			ExpectedFileSuffix: "_rpc_server.txt",
+		},
+		{
+			Name: "Types file",
+			Function: types.GenerateBuffer,
+			ExpectedFileSuffix: "_types.txt",
 		},
 	}
 
@@ -119,6 +125,60 @@ func TestSingleFileGenerators(t *testing.T) {
 				},
 			},
 			ExpectedFilePrefix: "./test_files/TestGenerate_only_built_in_types",
+		},
+		{
+			Name: "Methods using nested types",
+			ServiceRootImportPath: "order/service",
+			ProtoInterface: parser.ProtoInterface{
+				ServiceName: "SomeOtherService",
+				ProtoPackage: "otherservicepb",
+				Methods: []parser.Method{
+					{
+						Name: "Ping",
+						RequestMessage: "PingRequest",
+						ResponseMessage: "PingResponse",
+					},
+				},
+				Messages: []parser.Message{
+					{
+						Name: "PingRequest",
+						Fields: []parser.Field{
+							{
+								Name: "some_nested_value",
+								Type: "NestedVal",
+							},
+						},
+					},
+					{
+						Name: "PingResponse",
+						Fields: []parser.Field{
+							{
+								Name: "some_other_value",
+								Type: "OtherNestedVal",
+							},
+						},
+					},
+					{
+						Name: "NestedVal",
+						Fields: []parser.Field{
+							{
+								Name: "some_value",
+								Type: "int64",
+							},
+						},
+					},
+					{
+						Name: "OtherNestedVal",
+						Fields: []parser.Field{
+							{
+								Name: "some_string",
+								Type: "string",
+							},
+						},
+					},
+				},
+			},
+			ExpectedFilePrefix: "./test_files/TestGenerate_nested_types",
 		},
 	}
 
