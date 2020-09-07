@@ -153,13 +153,15 @@ func funcDefaultReturnStatement(namedReturnVariables, addError bool) func([]pars
 
 		returnStatement := "return "
 
-		for i := range returnArgs {
+		for i, arg := range returnArgs {
 			if namedReturnVariables {
-				returnStatement += strcase.ToLowerCamel("res_" + returnArgs[i].Name)
+				returnStatement += strcase.ToLowerCamel("res_" + arg.Name)
+			} else if arg.IsNestedMessage {
+				returnStatement += "&" + arg.Type + "{}"
 			} else {
-				defaultRetVal, ok := defaultReturnValues[returnArgs[i].Type]
+				defaultRetVal, ok := defaultReturnValues[arg.Type]
 				if !ok {
-					panic("No default return value for type" + returnArgs[i].Type)
+					panic("No default return value for type " + arg.Type)
 				}
 				returnStatement += defaultRetVal
 			}

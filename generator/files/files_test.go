@@ -293,6 +293,62 @@ func TestMultiFileGenerators(t *testing.T) {
 			},
 			ExpectedFilePrefix: "./test_files/TestGenerate_only_built_in_types",
 		},
+		{
+			Name: "Methods using nested types",
+			ServiceRootImportPath: "order/service",
+			ProtoInterface: parser.ProtoInterface{
+				ServiceName: "SomeOtherService",
+				ProtoPackage: "otherservicepb",
+				Methods: []parser.Method{
+					{
+						Name: "Ping",
+						RequestMessage: "PingRequest",
+						ResponseMessage: "PingResponse",
+					},
+				},
+				Messages: []parser.Message{
+					{
+						Name: "PingRequest",
+						Fields: []parser.Field{
+							{
+								Name: "some_nested_value",
+								Type: "NestedVal",
+								IsNestedMessage: true,
+							},
+						},
+					},
+					{
+						Name: "PingResponse",
+						Fields: []parser.Field{
+							{
+								Name: "some_other_value",
+								Type: "OtherNestedVal",
+								IsNestedMessage: true,
+							},
+						},
+					},
+					{
+						Name: "NestedVal",
+						Fields: []parser.Field{
+							{
+								Name: "some_value",
+								Type: "int64",
+							},
+						},
+					},
+					{
+						Name: "OtherNestedVal",
+						Fields: []parser.Field{
+							{
+								Name: "some_string",
+								Type: "string",
+							},
+						},
+					},
+				},
+			},
+			ExpectedFilePrefix: "./test_files/TestGenerate_nested_types",
+		},
 	}
 
 	for _, generator := range generatorsToTest {

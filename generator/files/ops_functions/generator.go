@@ -121,13 +121,7 @@ import(
 
 `
 
-var methodTmpl = `func {{ToCamel .Name}}(
-	ctx context.Context,
-	s state.State,
-{{- range .Args}}
-	{{ToLowerCamel .Name}} {{.Type}},
-{{- end}}
-) {{FuncRetValsWithError .ReturnArgs}} {
+var methodTmpl = `func {{ToCamel .Name}}{{SplitFuncArgsWithCtxAndState .Args}} {{FuncRetValsWithError .ReturnArgs}} {
 
 	{{FuncDefaultReturn_WithError .ReturnArgs}}
 }
