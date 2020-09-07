@@ -120,7 +120,7 @@ func (ts *clientSuite) TestPing() {
 			var err error
 			_, err = c.Ping(
 				ctx,
-				someNestedValue,
+				&someNestedValue,
 			)
 			ts.Require().NoError(err)
 

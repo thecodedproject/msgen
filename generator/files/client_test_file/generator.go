@@ -228,7 +228,7 @@ var testMethodTmpl = `func (ts *clientSuite) Test{{ToCamel .Name}}() {
 			{{range .ReturnArgs}}_, {{end}}err = c.{{ToCamel .Name}}(
 				ctx,
 {{- range .Args}}
-				{{ToLowerCamel .Name}},
+				{{if .IsNestedMessage}}&{{end}}{{ToLowerCamel .Name}},
 {{- end}}
 			)
 			ts.Require().NoError(err)
