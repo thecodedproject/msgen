@@ -24,6 +24,11 @@ func Generate(
 	outputDir string,
 ) error {
 
+	n := proto_helpers.NestedMessages(i)
+	if len(n) == 0 {
+		return nil
+	}
+
 	outputFile := path.Join(outputDir, relativePath)
 
 	writer, err := common.CreatePathAndOpen(outputFile)

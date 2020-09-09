@@ -10,6 +10,7 @@ import(
 	"github.com/thecodedproject/msgen/generator/files/client_grpc"
 	"github.com/thecodedproject/msgen/generator/files/client_test_file"
 	"github.com/thecodedproject/msgen/generator/files/ops_functions"
+	"github.com/thecodedproject/msgen/generator/files/proto_type_conversion"
 	"github.com/thecodedproject/msgen/generator/files/rpc_server"
 	"github.com/thecodedproject/msgen/generator/files/state"
 	"github.com/thecodedproject/msgen/generator/files/types"
@@ -52,6 +53,11 @@ func TestSingleFileGenerators(t *testing.T) {
 			Name: "Client Test",
 			Function: client_test_file.GenerateBuffer,
 			ExpectedFileSuffix: "_client_test.txt",
+		},
+		{
+			Name: "Proto type conversion",
+			Function: proto_type_conversion.GenerateBuffer,
+			ExpectedFileSuffix: "_proto_type_conversion.txt",
 		},
 		{
 			Name: "Rpc Server",

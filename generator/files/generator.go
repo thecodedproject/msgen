@@ -7,8 +7,10 @@ import(
 	"github.com/thecodedproject/msgen/generator/files/client_logical"
 	"github.com/thecodedproject/msgen/generator/files/client_test_file"
 	"github.com/thecodedproject/msgen/generator/files/ops_functions"
+	"github.com/thecodedproject/msgen/generator/files/proto_type_conversion"
 	"github.com/thecodedproject/msgen/generator/files/rpc_server"
 	"github.com/thecodedproject/msgen/generator/files/state"
+	"github.com/thecodedproject/msgen/generator/files/types"
 	"github.com/thecodedproject/msgen/parser"
 )
 
@@ -63,6 +65,15 @@ func Generate(
 		return errors.Wrap(err, "ops_functions.Generate")
 	}
 
+	err = proto_type_conversion.Generate(
+		serviceRootImportPath,
+		i,
+		outputDir,
+	)
+	if err != nil {
+		return errors.Wrap(err, "proto_type_conversion.Generate")
+	}
+
 	err = rpc_server.Generate(
 		serviceRootImportPath,
 		i,
@@ -78,6 +89,15 @@ func Generate(
 	)
 	if err != nil {
 		return errors.Wrap(err, "state.Generate")
+	}
+
+	err = types.Generate(
+		serviceRootImportPath,
+		i,
+		outputDir,
+	)
+	if err != nil {
+		return errors.Wrap(err, "types.Generate")
 	}
 
 	return nil
