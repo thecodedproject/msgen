@@ -96,7 +96,7 @@ import(
 {{- range .NestedTypes}}
 {{- $typeName := print (ToCamel .Name)}}
 
-func {{$typeName}}FromProto(v *{{$typeName}}) {{$typesPackage}}.{{$typeName}} {
+func {{$typeName}}FromProto(v *{{$typeName}}) *{{$typesPackage}}.{{$typeName}} {
 
 	if v == nil {
 		return nil
@@ -109,7 +109,7 @@ func {{$typeName}}FromProto(v *{{$typeName}}) {{$typesPackage}}.{{$typeName}} {
 	}
 }
 
-func {{$typeName}}ToProto(v *{{$typesPackage}}.{{$typeName}}) {{$typeName}} {
+func {{$typeName}}ToProto(v *{{$typesPackage}}.{{$typeName}}) *{{$typeName}} {
 
 	if v == nil {
 		return nil

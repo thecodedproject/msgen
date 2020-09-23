@@ -6,7 +6,7 @@ import(
 	"order/service"
 )
 
-func NestedValFromProto(v *NestedVal) service.NestedVal {
+func NestedValFromProto(v *NestedVal) *service.NestedVal {
 
 	if v == nil {
 		return nil
@@ -17,7 +17,7 @@ func NestedValFromProto(v *NestedVal) service.NestedVal {
 	}
 }
 
-func NestedValToProto(v *service.NestedVal) NestedVal {
+func NestedValToProto(v *service.NestedVal) *NestedVal {
 
 	if v == nil {
 		return nil
@@ -28,7 +28,7 @@ func NestedValToProto(v *service.NestedVal) NestedVal {
 	}
 }
 
-func OtherNestedValFromProto(v *OtherNestedVal) service.OtherNestedVal {
+func OtherNestedValFromProto(v *OtherNestedVal) *service.OtherNestedVal {
 
 	if v == nil {
 		return nil
@@ -39,7 +39,7 @@ func OtherNestedValFromProto(v *OtherNestedVal) service.OtherNestedVal {
 	}
 }
 
-func OtherNestedValToProto(v *service.OtherNestedVal) OtherNestedVal {
+func OtherNestedValToProto(v *service.OtherNestedVal) *OtherNestedVal {
 
 	if v == nil {
 		return nil
