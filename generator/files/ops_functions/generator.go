@@ -69,14 +69,13 @@ func GenerateBufferForMethod(
 	err = header.Execute(writer, struct{
 		Package string
 		Imports []string
-		ServiceName string
 	}{
 		Package: "ops",
 		Imports: []string{
 			"\"context\"",
+			"\"" + serviceRootImportPath + "\"",
 			"\"" + serviceRootImportPath + "/state\"",
 		},
-		ServiceName: "SomeService",
 	})
 	if err != nil {
 		return err
@@ -87,10 +86,15 @@ func GenerateBufferForMethod(
 		return err
 	}
 
+	serviceName := common.ServiceNameFromRootImportPath(serviceRootImportPath)
+	args = proto_helpers.AddImportToNestedFieldNames(args, serviceName)
+
 	returnArgs, err := proto_helpers.MethodResponseFields(i, methodName)
 	if err != nil {
 		return err
 	}
+
+	returnArgs = proto_helpers.AddImportToNestedFieldNames(returnArgs, serviceName)
 
 	methodParams := Method{
 		Name: methodName,

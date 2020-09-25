@@ -2,15 +2,16 @@ package ops
 
 import(
 	"context"
+	"order/service"
 	"order/service/state"
 )
 
 func Ping(
 	ctx context.Context,
 	s state.State,
-	someNestedValue *NestedVal,
-) (*OtherNestedVal, error) {
+	someNestedValue *service.NestedVal,
+) (*service.OtherNestedVal, error) {
 
-	return &OtherNestedVal{}, nil
+	return &service.OtherNestedVal{}, nil
 }
 

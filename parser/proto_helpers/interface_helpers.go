@@ -157,3 +157,18 @@ func IsMessage(
 	}
 	return false
 }
+
+func AddImportToNestedFieldNames(
+	fields []parser.Field,
+	importName string,
+) []parser.Field {
+
+	retVal := make([]parser.Field, 0, len(fields))
+	for _, f := range fields {
+		if f.IsNestedMessage {
+			f.Type = importName + "." + f.Type
+		}
+		retVal = append(retVal, f)
+	}
+	return retVal
+}

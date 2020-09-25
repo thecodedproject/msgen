@@ -2,6 +2,7 @@ package ops
 
 import(
 	"context"
+	"some/service"
 	"some/service/state"
 )
 
