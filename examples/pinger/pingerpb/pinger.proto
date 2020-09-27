@@ -39,6 +39,5 @@ message PingReq {
 
 message PingRes {
 	bool ping_bool = 1;
-	float ping_float = 2;
 }
 
