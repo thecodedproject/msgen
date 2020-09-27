@@ -99,7 +99,7 @@ func MethodRequestFields(
 	return message.Fields, nil
 }
 
-func MethodResponseFieldsWithImportOnNestedTypes(
+func MethodResponseFieldsWithImportOnNestedFields(
 	i parser.ProtoInterface,
 	methodName string,
 	nestedImportedName string,
@@ -205,4 +205,34 @@ func AddImportToNestedFieldNames(
 		retVal = append(retVal, f)
 	}
 	return retVal
+}
+
+func MethodUsesNestedMessages(
+	i parser.ProtoInterface,
+	methodName string,
+) (bool, error) {
+
+	reqFields, err := MethodRequestFields(i, methodName)
+	if err != nil {
+		return false, err
+	}
+
+	for _, f := range reqFields {
+		if f.IsNestedMessage {
+			return true, nil
+		}
+	}
+
+	resFields, err := MethodResponseFields(i, methodName)
+	if err != nil {
+		return false, err
+	}
+
+	for _, f := range resFields {
+		if f.IsNestedMessage {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }

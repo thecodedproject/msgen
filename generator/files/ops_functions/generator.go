@@ -7,6 +7,7 @@ import(
 	"github.com/thecodedproject/msgen/parser/proto_helpers"
 	"io"
 	"path"
+	"sort"
 )
 
 const(
@@ -66,35 +67,49 @@ func GenerateBufferForMethod(
 		return err
 	}
 
+	imports := []string{
+		"context",
+		serviceRootImportPath + "/state",
+	}
+
+	if usesNested, err := proto_helpers.MethodUsesNestedMessages(i, methodName); err != nil {
+		return err
+	} else if usesNested {
+		imports = append(imports, serviceRootImportPath)
+	}
+
+	sort.Strings(imports)
+
 	err = header.Execute(writer, struct{
 		Package string
 		Imports []string
 	}{
 		Package: "ops",
-		Imports: []string{
-			"\"context\"",
-			"\"" + serviceRootImportPath + "\"",
-			"\"" + serviceRootImportPath + "/state\"",
-		},
+		Imports: imports,
 	})
 	if err != nil {
 		return err
 	}
 
-	args, err := proto_helpers.MethodRequestFields(i, methodName)
-	if err != nil {
-		return err
-	}
-
 	serviceName := common.ServiceNameFromRootImportPath(serviceRootImportPath)
-	args = proto_helpers.AddImportToNestedFieldNames(args, serviceName)
-
-	returnArgs, err := proto_helpers.MethodResponseFields(i, methodName)
+	args, err := proto_helpers.MethodRequestFieldsWithImportOnNestedFields(
+		i,
+		methodName,
+		serviceName,
+	)
 	if err != nil {
 		return err
 	}
 
-	returnArgs = proto_helpers.AddImportToNestedFieldNames(returnArgs, serviceName)
+
+	returnArgs, err := proto_helpers.MethodResponseFieldsWithImportOnNestedFields(
+		i,
+		methodName,
+		serviceName,
+	)
+	if err != nil {
+		return err
+	}
 
 	methodParams := Method{
 		Name: methodName,
@@ -119,7 +134,7 @@ var headerTmpl = `package {{.Package}}
 
 import(
 {{- range .Imports}}
-	{{.}}
+	"{{.}}"
 {{- end}}
 )
 

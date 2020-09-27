@@ -94,7 +94,7 @@ func GenerateBuffer(
 			return err
 		}
 
-		returnArgs, err := proto_helpers.MethodResponseFieldsWithImportOnNestedTypes(
+		returnArgs, err := proto_helpers.MethodResponseFieldsWithImportOnNestedFields(
 			i,
 			method.Name,
 			serviceName,
