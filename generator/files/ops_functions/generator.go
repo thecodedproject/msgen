@@ -60,7 +60,9 @@ func GenerateBufferForMethod(
 	methodName string,
 ) error {
 
-	baseTemplate := common.BaseTemplate()
+	serviceName := common.ServiceNameFromRootImportPath(serviceRootImportPath)
+
+	baseTemplate := common.BaseTemplate(serviceName)
 
 	header, err := baseTemplate.Parse(headerTmpl)
 	if err != nil {
@@ -91,22 +93,12 @@ func GenerateBufferForMethod(
 		return err
 	}
 
-	serviceName := common.ServiceNameFromRootImportPath(serviceRootImportPath)
-	args, err := proto_helpers.MethodRequestFieldsWithImportOnNestedFields(
-		i,
-		methodName,
-		serviceName,
-	)
+	args, err := proto_helpers.MethodRequestFields(i, methodName)
 	if err != nil {
 		return err
 	}
 
-
-	returnArgs, err := proto_helpers.MethodResponseFieldsWithImportOnNestedFields(
-		i,
-		methodName,
-		serviceName,
-	)
+	returnArgs, err := proto_helpers.MethodResponseFields(i, methodName)
 	if err != nil {
 		return err
 	}

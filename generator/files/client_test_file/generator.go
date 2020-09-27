@@ -14,6 +14,7 @@ const(
 
 type Method struct {
 	Name string
+	ServiceName string
 	Args []parser.Field
 	ReturnArgs []parser.Field
 }
@@ -44,14 +45,14 @@ func GenerateBuffer(
 	writer io.Writer,
 ) error {
 
-	baseTemplate := common.BaseTemplate()
+	serviceName := common.ServiceNameFromRootImportPath(serviceRootImportPath)
+
+	baseTemplate := common.BaseTemplate(serviceName)
 
 	header, err := baseTemplate.Parse(testHeaderTmpl)
 	if err != nil {
 		return err
 	}
-
-	serviceName := common.ServiceNameFromRootImportPath(serviceRootImportPath)
 
 	err = header.Execute(writer, struct{
 		Package string
@@ -84,26 +85,19 @@ func GenerateBuffer(
 
 	for _, method := range i.Methods {
 
-		args, err := proto_helpers.MethodRequestFieldsWithImportOnNestedFields(
-			i,
-			method.Name,
-			serviceName,
-		)
+		args, err := proto_helpers.MethodRequestFields(i, method.Name)
 		if err != nil {
 			return err
 		}
 
-		returnArgs, err := proto_helpers.MethodResponseFieldsWithImportOnNestedFields(
-			i,
-			method.Name,
-			serviceName,
-		)
+		returnArgs, err := proto_helpers.MethodResponseFields(i, method.Name)
 		if err != nil {
 			return err
 		}
 
 		methodParams := Method{
 			Name: method.Name,
+			ServiceName: serviceName,
 			Args: args,
 			ReturnArgs: returnArgs,
 		}
@@ -211,7 +205,9 @@ func (ts *TestGRPCSuite) SetupTest() {
 
 `
 
-var testMethodTmpl = `func (ts *clientSuite) Test{{ToCamel .Name}}() {
+var testMethodTmpl = `
+{{- $serviceName := .ServiceName -}}
+func (ts *clientSuite) Test{{ToCamel .Name}}() {
 
 	testCases := []struct{
 		Name string
@@ -232,7 +228,11 @@ var testMethodTmpl = `func (ts *clientSuite) Test{{ToCamel .Name}}() {
 
 			ctx := context.Background()
 {{- range .Args}}
+{{- if .IsNestedMessage}}
+			var {{ToLowerCamel .Name}} {{ToLower $serviceName}}.{{.Type}}
+{{- else}}
 			var {{ToLowerCamel .Name}} {{.Type}}
+{{- end}}
 {{- end}}
 			var err error
 			{{range .ReturnArgs}}_, {{end}}err = c.{{ToCamel .Name}}(

@@ -44,7 +44,9 @@ func GenerateBuffer(
 	writer io.Writer,
 ) error {
 
-	baseTemplate := common.BaseTemplate()
+	serviceName := common.ServiceNameFromRootImportPath(serviceRootImportPath)
+
+	baseTemplate := common.BaseTemplate(serviceName)
 
 	header, err := baseTemplate.Parse(logicalHeaderTmpl)
 	if err != nil {
@@ -75,22 +77,12 @@ func GenerateBuffer(
 			return err
 		}
 
-		serviceName := common.ServiceNameFromRootImportPath(serviceRootImportPath)
-
-		args, err := proto_helpers.MethodRequestFieldsWithImportOnNestedFields(
-			i,
-			method.Name,
-			serviceName,
-		)
+		args, err := proto_helpers.MethodRequestFields(i, method.Name)
 		if err != nil {
 			return err
 		}
 
-		returnArgs, err := proto_helpers.MethodResponseFieldsWithImportOnNestedFields(
-			i,
-			method.Name,
-			serviceName,
-		)
+		returnArgs, err := proto_helpers.MethodResponseFields(i, method.Name)
 		if err != nil {
 			return err
 		}

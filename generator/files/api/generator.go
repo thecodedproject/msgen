@@ -44,7 +44,7 @@ func GenerateBuffer(
 	writer io.Writer,
 ) error {
 
-	baseTemplate := common.BaseTemplate()
+	baseTemplate := common.BaseTemplate("")
 
 	header, err := baseTemplate.Parse(apiTmpl)
 	if err != nil {

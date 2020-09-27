@@ -65,7 +65,7 @@ func GenerateBuffer(
 		stateInfo.TestingType = "*" + inputStructName
 	}
 
-	t, err := common.BaseTemplate().Parse(backendsTmpl)
+	t, err := common.BaseTemplate("").Parse(backendsTmpl)
 	if err != nil {
 		return err
 	}

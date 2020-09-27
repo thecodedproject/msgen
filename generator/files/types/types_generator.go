@@ -49,14 +49,14 @@ func GenerateBuffer(
 	writer io.Writer,
 ) error {
 
-	baseTemplate := common.BaseTemplate()
+	serviceName := common.ServiceNameFromRootImportPath(serviceRootImportPath)
+
+	baseTemplate := common.BaseTemplate(serviceName)
 
 	header, err := baseTemplate.Parse(tmpl)
 	if err != nil {
 		return err
 	}
-
-	_, serviceName := path.Split(serviceRootImportPath)
 
 	err = header.Execute(writer, struct{
 		Package string

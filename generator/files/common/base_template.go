@@ -7,23 +7,23 @@ import(
 	"text/template"
 )
 
-func BaseTemplate() *template.Template {
+func BaseTemplate(nestedTypeImport string) *template.Template {
 
 	return template.New("").Funcs(map[string]interface{}{
-		"FuncArgs": funcArgumentSignature(false, false, false),
-		"FuncArgsWithCtx": funcArgumentSignature(false, true, false),
-		"FuncArgsWithCtxAndState": funcArgumentSignature(false, true, true),
-		"SplitFuncArgs": funcArgumentSignature(true, false, false),
-		"SplitFuncArgsWithCtx": funcArgumentSignature(true, true, false),
-		"SplitFuncArgsWithCtxAndState": funcArgumentSignature(true, true, true),
+		"FuncArgs": funcArgumentSignature(nestedTypeImport, false, false, false),
+		"FuncArgsWithCtx": funcArgumentSignature(nestedTypeImport, false, true, false),
+		"FuncArgsWithCtxAndState": funcArgumentSignature(nestedTypeImport, false, true, true),
+		"SplitFuncArgs": funcArgumentSignature(nestedTypeImport, true, false, false),
+		"SplitFuncArgsWithCtx": funcArgumentSignature(nestedTypeImport, true, true, false),
+		"SplitFuncArgsWithCtxAndState": funcArgumentSignature(nestedTypeImport, true, true, true),
 
-		"FuncRetVals": funcReturnSignature(false, false),
-		"FuncRetValsWithError": funcReturnSignature(false, true),
-		"NamedFuncRetVals": funcReturnSignature(true, false),
-		"NamedFuncRetValsWithError": funcReturnSignature(true, true),
+		"FuncRetVals": funcReturnSignature(nestedTypeImport, false, false),
+		"FuncRetValsWithError": funcReturnSignature(nestedTypeImport, false, true),
+		"NamedFuncRetVals": funcReturnSignature(nestedTypeImport, true, false),
+		"NamedFuncRetValsWithError": funcReturnSignature(nestedTypeImport, true, true),
 
-		"FuncDefaultReturn_WithError": funcDefaultReturnStatement(false, true),
-		"FuncDefaultReturn_Named_WithError": funcDefaultReturnStatement(true, true),
+		"FuncDefaultReturn_WithError": funcDefaultReturnStatement(nestedTypeImport, false, true),
+		"FuncDefaultReturn_Named_WithError": funcDefaultReturnStatement(nestedTypeImport, true, true),
 
 		"ToLower": strings.ToLower,
 		"ToCamel": strcase.ToCamel,
@@ -42,7 +42,7 @@ var defaultReturnValues = map[string]string{
 	"string": "\"\"",
 }
 
-func funcArgumentSignature(splitLines, withContext, withState bool) func([]parser.Field) string {
+func funcArgumentSignature(nestedTypeImport string, splitLines, withContext, withState bool) func([]parser.Field) string {
 
 	return func(args []parser.Field) string {
 
@@ -55,10 +55,7 @@ func funcArgumentSignature(splitLines, withContext, withState bool) func([]parse
 
 		argSig := "("
 		for i, f := range args {
-			argType := f.Type
-			if f.IsNestedMessage {
-				argType = "*" + argType
-			}
+			argType := buildArgType(nestedTypeImport, f)
 
 			if splitLines {
 				argSig += "\n\t"
@@ -81,7 +78,7 @@ func funcArgumentSignature(splitLines, withContext, withState bool) func([]parse
 	}
 }
 
-func funcReturnSignature(namedReturnVariables, addError bool) func([]parser.Field) string {
+func funcReturnSignature(nestedTypeImport string, namedReturnVariables, addError bool) func([]parser.Field) string {
 
 	return func(returnArgs []parser.Field) string {
 
@@ -105,10 +102,7 @@ func funcReturnSignature(namedReturnVariables, addError bool) func([]parser.Fiel
 
 		for i := range returnArgs {
 
-			returnType := returnArgs[i].Type
-			if returnArgs[i].IsNestedMessage {
-				returnType = "*" + returnType
-			}
+			returnType := buildArgType(nestedTypeImport, returnArgs[i])
 
 			if namedReturnVariables {
 				retSignature += strcase.ToLowerCamel("res_" + returnArgs[i].Name) + " " + returnType
@@ -135,7 +129,20 @@ func funcReturnSignature(namedReturnVariables, addError bool) func([]parser.Fiel
 	}
 }
 
-func funcDefaultReturnStatement(namedReturnVariables, addError bool) func([]parser.Field) string {
+func buildArgType(nestedTypeImport string, f parser.Field) string {
+
+	if !f.IsNestedMessage {
+		return f.Type
+	}
+
+	if nestedTypeImport == "" {
+		return "*" + f.Type
+	}
+
+	return "*" + nestedTypeImport + "." + f.Type
+}
+
+func funcDefaultReturnStatement(nestedTypeImport string, namedReturnVariables, addError bool) func([]parser.Field) string {
 
 	return func(returnArgs []parser.Field) string {
 
@@ -157,7 +164,11 @@ func funcDefaultReturnStatement(namedReturnVariables, addError bool) func([]pars
 			if namedReturnVariables {
 				returnStatement += strcase.ToLowerCamel("res_" + arg.Name)
 			} else if arg.IsNestedMessage {
-				returnStatement += "&" + arg.Type + "{}"
+				if nestedTypeImport == "" {
+					returnStatement += "&" + arg.Type + "{}"
+				} else {
+					returnStatement += "&" + nestedTypeImport + "." + arg.Type + "{}"
+				}
 			} else {
 				defaultRetVal, ok := defaultReturnValues[arg.Type]
 				if !ok {

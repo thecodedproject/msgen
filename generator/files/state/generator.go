@@ -65,7 +65,9 @@ func GenerateBuffer(
 	writer io.Writer,
 ) error {
 
-	baseTemplate := common.BaseTemplate()
+	serviceName := common.ServiceNameFromRootImportPath(serviceRootImportPath)
+
+	baseTemplate := common.BaseTemplate(serviceName)
 
 	header, err := baseTemplate.Parse(headerTmpl)
 	if err != nil {
