@@ -69,6 +69,23 @@ func MethodResponseMessage(
 	return message, nil
 }
 
+func MethodRequestFieldsWithImportOnNestedFields(
+	i parser.ProtoInterface,
+	methodName string,
+	nestedImportedName string,
+) ([]parser.Field, error) {
+
+	fields, err := MethodRequestFields(
+		i,
+		methodName,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return AddImportToNestedFieldNames(fields, nestedImportedName), nil
+}
+
 func MethodRequestFields(
 	i parser.ProtoInterface,
 	methodName string,
@@ -80,6 +97,23 @@ func MethodRequestFields(
 	}
 
 	return message.Fields, nil
+}
+
+func MethodResponseFieldsWithImportOnNestedTypes(
+	i parser.ProtoInterface,
+	methodName string,
+	nestedImportedName string,
+) ([]parser.Field, error) {
+
+	fields, err := MethodResponseFields(
+		i,
+		methodName,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return AddImportToNestedFieldNames(fields, nestedImportedName), nil
 }
 
 func MethodResponseFields(

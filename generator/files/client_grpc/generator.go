@@ -52,6 +52,8 @@ func GenerateBuffer(
 		return err
 	}
 
+	serviceName := common.ServiceNameFromRootImportPath(serviceRootImportPath)
+
 	err = header.Execute(writer, struct{
 		Package string
 		Imports []string
@@ -60,7 +62,9 @@ func GenerateBuffer(
 		ProtoServiceName string
 	}{
 		Package: "grpc",
-		Imports: []string{
+		Imports: common.SortedImportsWithNestedTypesImport(
+			serviceRootImportPath,
+			i,
 			"context",
 			"errors",
 			"flag",
@@ -69,8 +73,8 @@ func GenerateBuffer(
 			serviceRootImportPath + "/" + i.ProtoPackage,
 			"testing",
 			"time",
-		},
-		ServiceName: common.ServiceNameFromRootImportPath(serviceRootImportPath),
+		),
+		ServiceName: serviceName,
 		ProtoPackage: i.ProtoPackage,
 		ProtoServiceName: i.ServiceName,
 	})
@@ -81,12 +85,20 @@ func GenerateBuffer(
 
 	for _, method := range i.Methods {
 
-		args, err := proto_helpers.MethodRequestFields(i, method.Name)
+		args, err := proto_helpers.MethodRequestFieldsWithImportOnNestedFields(
+			i,
+			method.Name,
+			serviceName,
+		)
 		if err != nil {
 			return err
 		}
 
-		returnArgs, err := proto_helpers.MethodResponseFields(i, method.Name)
+		returnArgs, err := proto_helpers.MethodResponseFieldsWithImportOnNestedTypes(
+			i,
+			method.Name,
+			serviceName,
+		)
 		if err != nil {
 			return err
 		}

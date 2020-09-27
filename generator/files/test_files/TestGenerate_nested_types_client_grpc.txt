@@ -8,6 +8,7 @@ import(
 	"flag"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
+	"order/service"
 	"order/service/otherservicepb"
 	"testing"
 	"time"
@@ -57,8 +58,8 @@ func NewForTesting(t *testing.T, conn *grpc.ClientConn) *client {
 
 func (c *client) Ping(
 	ctx context.Context,
-	someNestedValue *NestedVal,
-) (resSomeOtherValue *OtherNestedVal, err error) {
+	someNestedValue *service.NestedVal,
+) (resSomeOtherValue *service.OtherNestedVal, err error) {
 
 	res, err := c.rpcClient.Ping(
 		ctx,
