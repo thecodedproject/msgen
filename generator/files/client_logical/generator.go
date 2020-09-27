@@ -56,11 +56,13 @@ func GenerateBuffer(
 		Imports []string
 	}{
 		Package: "logical",
-		Imports: []string{
+		Imports: common.SortedImportsWithNestedTypesImport(
+			serviceRootImportPath,
+			i,
 			"context",
 			serviceRootImportPath + "/ops",
 			serviceRootImportPath + "/state",
-		},
+		),
 	})
 	if err != nil {
 		return err
@@ -73,12 +75,22 @@ func GenerateBuffer(
 			return err
 		}
 
-		args, err := proto_helpers.MethodRequestFields(i, method.Name)
+		serviceName := common.ServiceNameFromRootImportPath(serviceRootImportPath)
+
+		args, err := proto_helpers.MethodRequestFieldsWithImportOnNestedFields(
+			i,
+			method.Name,
+			serviceName,
+		)
 		if err != nil {
 			return err
 		}
 
-		returnArgs, err := proto_helpers.MethodResponseFields(i, method.Name)
+		returnArgs, err := proto_helpers.MethodResponseFieldsWithImportOnNestedFields(
+			i,
+			method.Name,
+			serviceName,
+		)
 		if err != nil {
 			return err
 		}
