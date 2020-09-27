@@ -1,0 +1,4 @@
+
+*.go
+
+!pinger/generate.go

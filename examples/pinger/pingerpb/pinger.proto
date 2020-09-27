@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package pingerpb;
+
+service Pinger {
+  rpc Ping (PingRequest) returns (PingResponse) {}
+
+	rpc Pong (PongRequest) returns (PongResponse) {}
+
+	rpc NestedPing (NestedPingRequest) returns (NestedPingResponse) {}
+}
+
+message PingRequest {
+	int64 int64_value = 1;
+	string string_value = 2;
+}
+
+message PingResponse {}
+
+message PongRequest {}
+
+message PongResponse {
+	int64 int64_value = 1;
+	string string_value = 2;
+}
+
+message NestedPingRequest {
+	PingReq some_request = 1;
+}
+
+message NestedPingResponse {
+	PingRes some_response = 2;
+}
+
+message PingReq {
+	int64 ping_int = 1;
+	string ping_string = 2;
+}
+
+message PingRes {
+	bool ping_bool = 1;
+	float ping_float = 2;
+}
+
