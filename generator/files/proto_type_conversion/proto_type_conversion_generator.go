@@ -64,7 +64,7 @@ func GenerateBuffer(
 		return err
 	}
 
-	_, serviceName := path.Split(serviceRootImportPath)
+	serviceName := common.ServiceNameFromRootImportPath(serviceRootImportPath)
 
 	return header.Execute(writer, struct{
 		Package string
@@ -72,7 +72,7 @@ func GenerateBuffer(
 		TypesPackage string
 		NestedTypes []parser.Message
 	}{
-		Package: serviceName + "pb",
+		Package: i.ProtoPackage,
 		Imports: []string{
 			"\"" + serviceRootImportPath + "\"",
 		},

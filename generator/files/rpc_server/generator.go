@@ -55,7 +55,6 @@ func GenerateBuffer(
 	err = header.Execute(writer, struct{
 		Package string
 		Imports []string
-		ServiceName string
 	}{
 		Package: "rpc_server",
 		Imports: []string{
@@ -64,7 +63,6 @@ func GenerateBuffer(
 			"\"" + serviceRootImportPath + "/state\"",
 			"\"" + serviceRootImportPath + "/" + i.ProtoPackage + "\"",
 		},
-		ServiceName: "SomeService",
 	})
 	if err != nil {
 		return err
@@ -72,12 +70,22 @@ func GenerateBuffer(
 
 	for _, method := range i.Methods {
 
-		args, err := proto_helpers.MethodRequestFields(i, method.Name)
+		serviceName := common.ServiceNameFromRootImportPath(serviceRootImportPath)
+
+		args, err := proto_helpers.MethodRequestFieldsWithImportOnNestedFields(
+			i,
+			method.Name,
+			serviceName,
+		)
 		if err != nil {
 			return err
 		}
 
-		returnArgs, err := proto_helpers.MethodResponseFields(i, method.Name)
+		returnArgs, err := proto_helpers.MethodResponseFieldsWithImportOnNestedFields(
+			i,
+			method.Name,
+			serviceName,
+		)
 		if err != nil {
 			return err
 		}
