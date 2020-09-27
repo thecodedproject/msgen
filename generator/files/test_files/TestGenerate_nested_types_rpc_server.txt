@@ -27,14 +27,14 @@ func (s *Server) Ping(
 	someOtherValue, err := ops.Ping(
 		ctx,
 		s.st,
-		req.SomeNestedValue,
+		otherservicepb.NestedValFromProto(req.SomeNestedValue),
 	)
 	if err != nil {
 		return nil, err
 	}
 
 	return &otherservicepb.PingResponse{
-		SomeOtherValue: someOtherValue,
+		SomeOtherValue: otherservicepb.OtherNestedValToProto(someOtherValue),
 	}, nil
 }
 

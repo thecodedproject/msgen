@@ -125,25 +125,35 @@ func New(st state.State) *Server {
 
 `
 
-var testMethodTmpl = `func (s *Server) {{ToCamel .Name}}(
+var testMethodTmpl = `
+{{- $protoPackage := .ProtoPackage -}}
+func (s *Server) {{ToCamel .Name}}(
 	ctx context.Context,
-	req *{{.ProtoPackage}}.{{ToCamel .Name}}Request,
-) (*{{.ProtoPackage}}.{{ToCamel .Name}}Response, error) {
+	req *{{$protoPackage}}.{{ToCamel .Name}}Request,
+) (*{{$protoPackage}}.{{ToCamel .Name}}Response, error) {
 
 	{{range .ReturnArgs}}{{ToLowerCamel .Name}}, {{end}}err := ops.{{ToCamel .Name}}(
 		ctx,
 		s.st,
 {{- range .Args}}
+{{- if .IsNestedMessage}}
+		{{$protoPackage}}.{{.Type}}FromProto(req.{{ToCamel .Name}}),
+{{- else}}
 		req.{{ToCamel .Name}},
+{{- end}}
 {{- end}}
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	return &{{.ProtoPackage}}.{{ToCamel .Name}}Response{
+	return &{{$protoPackage}}.{{ToCamel .Name}}Response{
 {{- range .ReturnArgs}}
+{{- if .IsNestedMessage}}
+		{{ToCamel .Name}}: {{$protoPackage}}.{{.Type}}ToProto({{ToLowerCamel .Name}}),
+{{- else}}
 		{{ToCamel .Name}}: {{ToLowerCamel .Name}},
+{{- end}}
 {{- end}}
 	}, nil
 }
