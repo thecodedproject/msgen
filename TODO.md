@@ -5,3 +5,5 @@
 * Using nested types from other microservices
 
 * Using custom go types (with custom conversion); e.g. a shopspring.Decimal
+
+* Split out client_test file into seperate files (one for each client function) - not sure where the common code should go yet...

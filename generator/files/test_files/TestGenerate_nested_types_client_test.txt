@@ -116,7 +116,7 @@ func (ts *clientSuite) TestPing() {
 			)
 
 			ctx := context.Background()
-			var someNestedValue NestedVal
+			var someNestedValue service.NestedVal
 			var err error
 			_, err = c.Ping(
 				ctx,

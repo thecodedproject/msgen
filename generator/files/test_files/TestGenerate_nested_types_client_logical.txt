@@ -4,6 +4,7 @@ package logical
 
 import(
 	"context"
+	"order/service"
 	"order/service/ops"
 	"order/service/state"
 )
@@ -21,8 +22,8 @@ func New(s state.State) *client {
 
 func (c *client) Ping(
 	ctx context.Context,
-	someNestedValue *NestedVal,
-) (*OtherNestedVal, error) {
+	someNestedValue *service.NestedVal,
+) (*service.OtherNestedVal, error) {
 
 	return ops.Ping(
 		ctx,
