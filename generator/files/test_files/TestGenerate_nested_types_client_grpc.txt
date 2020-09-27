@@ -64,13 +64,13 @@ func (c *client) Ping(
 	res, err := c.rpcClient.Ping(
 		ctx,
 		&otherservicepb.PingRequest{
-			SomeNestedValue: someNestedValue,
+			SomeNestedValue: otherservicepb.NestedValToProto(someNestedValue),
 		},
 	)
 	if err != nil {
 		return resSomeOtherValue, err
 	}
 
-	return res.SomeOtherValue, nil
+	return otherservicepb.OtherNestedValFromProto(res.SomeOtherValue), nil
 }
 

@@ -85,19 +85,17 @@ func GenerateBuffer(
 
 	for _, method := range i.Methods {
 
-		args, err := proto_helpers.MethodRequestFieldsWithImportOnNestedFields(
+		args, err := proto_helpers.MethodRequestFields(
 			i,
 			method.Name,
-			serviceName,
 		)
 		if err != nil {
 			return err
 		}
 
-		returnArgs, err := proto_helpers.MethodResponseFieldsWithImportOnNestedFields(
+		returnArgs, err := proto_helpers.MethodResponseFields(
 			i,
 			method.Name,
-			serviceName,
 		)
 		if err != nil {
 			return err
@@ -193,13 +191,19 @@ func NewForTesting(t *testing.T, conn *grpc.ClientConn) *client {
 
 `
 
-var grpcMethodTmpl = `func (c *client) {{ToCamel .Name}}{{SplitFuncArgsWithCtx .Args}} {{NamedFuncRetValsWithError .ReturnArgs}} {
+var grpcMethodTmpl = `
+{{- $protoPackage := .ProtoPackage -}}
+func (c *client) {{ToCamel .Name}}{{SplitFuncArgsWithCtx .Args}} {{NamedFuncRetValsWithError .ReturnArgs}} {
 
 	res, err := c.rpcClient.{{ToCamel .Name}}(
 		ctx,
-		&{{.ProtoPackage}}.{{ToCamel .Name}}Request{
+		&{{$protoPackage}}.{{ToCamel .Name}}Request{
 {{- range .Args}}
+{{- if .IsNestedMessage}}
+			{{ToCamel .Name}}: {{$protoPackage}}.{{ToCamel .Type}}ToProto({{ToLowerCamel .Name}}),
+{{- else}}
 			{{ToCamel .Name}}: {{ToLowerCamel .Name}},
+{{- end}}
 {{- end}}
 		},
 	)
@@ -207,18 +211,31 @@ var grpcMethodTmpl = `func (c *client) {{ToCamel .Name}}{{SplitFuncArgsWithCtx .
 		{{FuncDefaultReturn_Named_WithError .ReturnArgs}}
 	}
 
-	return {{range $index, $elem := .ReturnArgs}}{{if $index}}, {{end}}res.{{ToCamel .Name}}{{end}}, nil
+	return {{range $index, $elem := .ReturnArgs}}
+		{{- if $index}}, {{end -}}
+		{{- if .IsNestedMessage -}}
+			{{$protoPackage}}.{{ToCamel .Type}}FromProto(res.{{ToCamel .Name}})
+		{{- else -}}
+			res.{{ToCamel .Name}}
+		{{- end -}}
+	{{end}}, nil
 }
 
 `
 
-var grpcMethodEmptyReturnTmpl = `func (c *client) {{ToCamel .Name}}{{SplitFuncArgsWithCtx .Args}} error {
+var grpcMethodEmptyReturnTmpl = `
+{{- $protoPackage := .ProtoPackage -}}
+func (c *client) {{ToCamel .Name}}{{SplitFuncArgsWithCtx .Args}} error {
 
 	_, err := c.rpcClient.{{ToCamel .Name}}(
 		ctx,
 		&{{.ProtoPackage}}.{{ToCamel .Name}}Request{
 {{- range .Args}}
+{{- if .IsNestedMessage}}
+			{{ToCamel .Name}}: {{$protoPackage}}.{{ToCamel .Type}}ToProto({{ToLowerCamel .Name}}),
+{{- else}}
 			{{ToCamel .Name}}: {{ToLowerCamel .Name}},
+{{- end}}
 {{- end}}
 		},
 	)
