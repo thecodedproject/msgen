@@ -136,3 +136,17 @@ func TestParse(t *testing.T) {
 		})
 	}
 }
+
+func TestGetPackgeContents(t *testing.T) {
+
+
+	packageDir := "example_proto/custom_conversion_1"
+
+	_ = methods.AddCustomConversionFields(
+		packageDir,
+		[]string{"IntAsString"},
+	)
+
+	assert.Fail(t, "TODO: implement...")
+
+}
