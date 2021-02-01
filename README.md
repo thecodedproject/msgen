@@ -17,3 +17,9 @@ go test ./...
 ```
 
 (Note the tests fail with a `TODO: Implement test...` message)
+
+Clean any of the example folders (i.e. remove all generated files) with:
+
+```
+git clean -xfd
+```
