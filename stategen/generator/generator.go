@@ -76,6 +76,7 @@ func GenerateBuffer(
 type Field struct {
 	Name string
 	Type string
+	TypeImportAlias string
 }
 
 type Import struct {
@@ -142,7 +143,6 @@ func parseInputFile(
 						if inputType.Fields != nil {
 							for _, f := range inputType.Fields.List {
 
-
 								if len(f.Names) != 1 || f.Names[0] == nil {
 									inspectErr = errors.New("input type has field with no name")
 									return false
@@ -151,6 +151,7 @@ func parseInputFile(
 								info.Fields = append(info.Fields, Field{
 									Name: f.Names[0].Name,
 									Type: string(src[f.Type.Pos()-1:f.Type.End()-1]),
+									TypeImportAlias: getImportAliasFromType(f.Type),
 								})
 							}
 						}
@@ -176,21 +177,31 @@ func parseInputFile(
 	return info, nil
 }
 
+func getImportAliasFromType(
+	expr ast.Expr,
+) string {
+
+	switch t := expr.(type) {
+	case *ast.ArrayType:
+		return getImportAliasFromType(t.Elt)
+	case *ast.ChanType:
+		return getImportAliasFromType(t.Value)
+	case *ast.SelectorExpr:
+		return t.X.(*ast.Ident).Name
+	case *ast.StarExpr:
+		return getImportAliasFromType(t.X)
+	default:
+		return ""
+	}
+}
+
 func removeImportsNotUsedForFields(inputStructInfo StateInfo) StateInfo {
 
 	var requiredImports []Import
 
-	for _, f := range inputStructInfo.Fields {
+	for _, i := range inputStructInfo.Imports {
 
-		fieldsTypeParts := strings.Split(f.Type, ".")
-
-		if len(fieldsTypeParts) == 1 {
-			continue
-		}
-
-		fieldPackageName := fieldsTypeParts[0]
-
-		for _, i := range inputStructInfo.Imports {
+		for _, f := range inputStructInfo.Fields {
 
 			var packageName string
 			if i.Alias != "" {
@@ -205,8 +216,9 @@ func removeImportsNotUsedForFields(inputStructInfo StateInfo) StateInfo {
 				)
 			}
 
-			if fieldPackageName == packageName {
+			if f.TypeImportAlias == packageName {
 				requiredImports = append(requiredImports, i)
+				break
 			}
 		}
 	}

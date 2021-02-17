@@ -1,0 +1,45 @@
+package state
+
+import(
+	"another/path/to/subtract"
+	"log"
+	"some/other/path/to/divide"
+	"some/path/to/add"
+	add_client "some/path/to/add/client"
+	divide_client "some/other/path/to/divide/client"
+	subtract_client "another/path/to/subtract/client"
+)
+
+type stateImpl struct {
+	addPointer *add.SomeStruct
+	addChanPointer chan<- *add.SomeStruct
+	subtractSlicePointer []*subtract.Client
+	dividePointerToSlice *[]divide.SomeStruct
+}
+
+func New() *stateImpl {
+
+	var s stateImpl
+
+	s.addPointer, err = add_client.MakePointer()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	s.addChanPointer, err = add_client.MakeChanPointer()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	s.subtractSlicePointer, err = subtract_client.MakeSlicePointer()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	s.dividePointerToSlice, err = divide_client.MakePointerToSlice()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return &s
+}

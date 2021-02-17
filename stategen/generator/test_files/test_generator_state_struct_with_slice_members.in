@@ -1,0 +1,31 @@
+package state
+
+import(
+	"another/path/to/subtract"
+	"log"
+	"some/path/to/add"
+	add_client "some/path/to/add/client"
+	subtract_client "another/path/to/subtract/client"
+)
+
+type stateImpl struct {
+	addSlice []add.SomeStruct
+	subtractSliceOfChans []chan subtract.Client
+}
+
+func New() *stateImpl {
+
+	var s stateImpl
+
+	s.addSlice, err = add_client.MakeSlice()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	s.subtractSliceOfChans, err = subtract_client.MakeSlice()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return &s
+}

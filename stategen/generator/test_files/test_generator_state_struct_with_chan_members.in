@@ -1,0 +1,45 @@
+package state
+
+import(
+	"another/path/to/subtract"
+	"log"
+	"some/other/path/to/divide"
+	"some/path/to/add"
+	add_client "some/path/to/add/client"
+	divide_client "some/other/path/to/divide/client"
+	subtract_client "another/path/to/subtract/client"
+)
+
+type stateImpl struct {
+	addRecieveChan chan<-add.SomeStruct
+	addRecieveChanWithSpace chan<- add.SomeStruct
+	subtractGenericChan chan subtract.Client
+	divideSendChan <-chan divide.SomeStruct
+}
+
+func New() *stateImpl {
+
+	var s stateImpl
+
+	s.addRecieveChan, err = add_client.MakeRecieveChan()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	s.addRecieveChanWithSpace, err = add_client.MakeRecieveChan()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	s.subtractGenericChan, err = subtract_client.MakeGenericChan()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	s.divideSendChan, err = divide_client.MakeSendChan()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return &s
+}

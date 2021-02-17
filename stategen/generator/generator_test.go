@@ -42,6 +42,27 @@ func TestGenerator(t *testing.T) {
 			ExpectedOutputFile: "./test_files/test_generator_state_struct_with_multiple_members_and_new_method.out",
 		},
 		{
+			Name: "State struct with chan members",
+			InputStructName: "stateImpl",
+			OutputInterfaceName: "State",
+			InputFile: "./test_files/test_generator_state_struct_with_chan_members.in",
+			ExpectedOutputFile: "./test_files/test_generator_state_struct_with_chan_members.out",
+		},
+		{
+			Name: "State struct with slice members",
+			InputStructName: "stateImpl",
+			OutputInterfaceName: "State",
+			InputFile: "./test_files/test_generator_state_struct_with_slice_members.in",
+			ExpectedOutputFile: "./test_files/test_generator_state_struct_with_slice_members.out",
+		},
+		{
+			Name: "State struct with pointer members",
+			InputStructName: "stateImpl",
+			OutputInterfaceName: "State",
+			InputFile: "./test_files/test_generator_state_struct_with_pointer_members.in",
+			ExpectedOutputFile: "./test_files/test_generator_state_struct_with_pointer_members.out",
+		},
+		{
 			Name: "Input struct with aliased imports",
 			InputStructName: "stateImpl",
 			OutputInterfaceName: "State",
