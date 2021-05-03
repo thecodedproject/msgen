@@ -23,3 +23,9 @@ Clean any of the example folders (i.e. remove all generated files) with:
 ```
 git clean -xfd
 ```
+
+## Install `stategen`
+
+```
+go get https://github.com/thecodedproject/msgen/stategen
+```
