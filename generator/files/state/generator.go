@@ -91,7 +91,7 @@ func GenerateBuffer(
 
 var headerTmpl = `package {{.Package}}
 
-//go:generate stategen --inputFile="{{.InputFile}}" --inputStruct="{{.InputStruct}}" --outputInterface="{{.OutputInterface}}" --outputFile="{{.OutputFile}}"
+//go:generate stategen --inputFile={{.InputFile}} --inputStruct={{.InputStruct}} --outputInterface={{.OutputInterface}} --outputFile={{.OutputFile}}
 
 import(
 )
