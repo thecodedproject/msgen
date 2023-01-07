@@ -13,3 +13,23 @@
     * Also special case other types - e.g. built in types - float, `repeated`/slices and other custom types like google.timestamp
 
 * Split out client_test file into seperate files (one for each client function) - not sure where the common code should go yet...
+
+* All generated imports should have a custom name (equal to the last imported dir name), e.g.
+```
+import (
+  my_package "some/path/to/my_package"
+)
+```
+  rather than
+```
+import (
+  "some/path/to/my_package"
+)
+```
+  * Also need to make sure that all generated imports have unique names (maybe we do this already?)
+
+* support al golang built in types:
+  * Have a common place which defines the all the built in types
+
+* Can we find the absolute location of the golang import files (i.e. go files) from a go import path? (Or the other way around?)
+  * Currently for conversion fucntion parsing we specify both

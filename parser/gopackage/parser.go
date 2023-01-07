@@ -1,30 +1,15 @@
 package gopackage
 
 import(
+	"errors"
 	"fmt"
 	"go/parser"
 	"go/token"
 	"go/ast"
 	"path"
 
-	"reflect"
+	//"reflect"
 )
-
-type Contents struct {
-	Functions []Function
-	StructTypes []string
-}
-
-type Function struct {
-	Name string
-	Args []Type
-	ReturnArgs []Type
-}
-
-type Type struct {
-	Name string
-	Import string
-}
 
 const CURRENT_PKG = "current_pkg_import"
 
@@ -59,12 +44,19 @@ func parseAst(pkgImportPath string, p *ast.Package) (*Contents, error) {
 
 	pc := Contents{
 		Functions: make([]Function, 0),
-		StructTypes: make([]string, 0),
+		StructTypes: make([]StructDecl, 0),
 	}
 
 	currentFileImports := make(map[string]string)
 
+	var inspectingErr error
 	ast.Inspect(p, func(node ast.Node) bool {
+
+		// If we have encountered an error stop parsing the AST asap (by stopping
+		// any more recursion into the ast)
+		if inspectingErr != nil {
+			return false
+		}
 
 		switch n := node.(type) {
 
@@ -88,12 +80,23 @@ func parseAst(pkgImportPath string, p *ast.Package) (*Contents, error) {
 					return true
 				}
 
-				//fmt.Println("func:", n.Name)
+				args, err := getArgTypeList(currentFileImports, n.Type.Params)
+				if err != nil {
+					inspectingErr = err
+					return false
+				}
+
+				retArgs, err := getArgTypeList(currentFileImports, n.Type.Results)
+				if err != nil {
+					inspectingErr = err
+					return false
+				}
 
 				f := Function{
 					Name: n.Name.String(),
-					Args: getTypeList(currentFileImports, n.Type.Params),
-					ReturnArgs: getTypeList(currentFileImports, n.Type.Results),
+					Import: pkgImportPath,
+					Args: args,
+					ReturnArgs: retArgs,
 				}
 
 				pc.Functions = append(pc.Functions, f)
@@ -108,10 +111,25 @@ func parseAst(pkgImportPath string, p *ast.Package) (*Contents, error) {
 				case *ast.TypeSpec:
 						switch s.Type.(type) {
 						case *ast.StructType:
-							_, importPrefix := path.Split(pkgImportPath)
+
+							structSpec := s.Type.(*ast.StructType)
+
+							structFields, err := getFieldTypeList(
+								currentFileImports,
+								structSpec.Fields,
+							)
+							if err != nil {
+								inspectingErr = err
+								return false
+							}
+
 							pc.StructTypes = append(
 								pc.StructTypes,
-								importPrefix + "." + s.Name.Name,
+								StructDecl{
+									Name: s.Name.Name,
+									Import: pkgImportPath,
+									Fields: structFields,
+								},
 							)
 						}
 				}
@@ -122,82 +140,134 @@ func parseAst(pkgImportPath string, p *ast.Package) (*Contents, error) {
 		}
 	})
 
+	if inspectingErr != nil {
+		return nil, inspectingErr
+	}
+
 	return &pc, nil
 }
 
-func getTypeList(imports map[string]string, fieldList *ast.FieldList) []Type {
+// getArgTypeList gets an order list of arguments from an `ast.FieldList`
+//
+// Used to get either the types of the parameters arguments for a function,
+// or the return arguments for a function whilst parsing the ast.
+func getArgTypeList(
+	imports map[string]string,
+	fieldList *ast.FieldList,
+) ([]Type, error) {
 
 	if fieldList == nil || fieldList.List == nil {
-		return nil
+		return nil, nil
 	}
 
 	typeList := make([]Type, 0, len(fieldList.List))
 
 	for i := range fieldList.List {
-		imp, fullType := getImportAndFullType(imports, fieldList.List[i].Type)
-		fmt.Println("Arg:", imp, fullType)
-
-		typeList = append(typeList, Type{
-			Name: fullType,
-			Import: imp,
-		})
+		fieldType, err := getFullType(imports, fieldList.List[i].Type)
+		if err != nil {
+			return nil, err
+		}
+		typeList = append(typeList, fieldType)
 	}
 
-	return typeList
+	return typeList, nil
 }
 
-func getImportAndFullType(
+// getFieldTypeList returns a map of field names and types from an `ast.FieldList`
+//
+// Used to get the list of fields and there types when pasing the ast for a struct
+func getFieldTypeList(
+	imports map[string]string,
+	fieldList *ast.FieldList,
+) (map[string]Type, error) {
+
+	if fieldList == nil || fieldList.List == nil {
+		return nil, nil
+	}
+
+	fieldTypeList := make(map[string]Type)
+
+	for i := range fieldList.List {
+		fieldType, err := getFullType(imports, fieldList.List[i].Type)
+		if err != nil {
+			return nil, err
+		}
+		fieldTypeList[fieldList.List[i].Names[0].String()] = fieldType
+	}
+
+	return fieldTypeList, nil
+}
+
+func getFullType(
 	imports map[string]string,
 	t ast.Expr,
-) (string, string) {
+) (Type, error) {
 
-	fmt.Println("******", reflect.TypeOf(t))
+	//fmt.Println("******", reflect.TypeOf(t))
 
 	switch t := t.(type) {
 		case *ast.ArrayType:
 			if t.Len != nil {
-				panic("[...]T array types not supported")
+				return nil, errors.New("[...]T array types not supported")
 			}
-			imp, fullType := getImportAndFullType(imports, t.Elt)
-			return imp, "[]" + fullType
+			fullType, err := getFullType(imports, t.Elt)
+			if err != nil {
+				return nil, err
+			}
+			return TypeArray{
+				ValueType: fullType,
+			}, nil
 
 		case *ast.Ident:
 			if isBuiltInType(t.Name) {
-				return "", t.Name
+				return TypeNamed{
+					Name: t.Name,
+				}, nil
 			}
 
 			importPath := imports[CURRENT_PKG]
-			_, importPrefix := path.Split(importPath)
-			return importPath, importPrefix + "." + t.Name
+			return TypeNamed{
+				Name: t.Name,
+				Import: importPath,
+			}, nil
 
 		case *ast.StarExpr:
-			imp, fullType := getImportAndFullType(imports, t.X)
-			return imp, "*" + fullType
+			fullType, err := getFullType(imports, t.X)
+			if err != nil {
+				return nil, err
+			}
+			return TypePointer{
+				ValueType: fullType,
+			}, nil
 
+		// i.e. an expression selecting something from another package
+		//	`some_pkg.SomeType`
 		case *ast.SelectorExpr:
 			imp, ok := t.X.(*ast.Ident)
 
 			if !ok {
-				panic("uknown selector X")
+				return nil, errors.New("uknown selector X")
 			}
 
-			localImport := imp.Name
-			if localImport == "" {
-				localImport = CURRENT_PKG
-			}
-
-			importPath, ok := imports[localImport]
+			importPath, ok := imports[imp.Name]
 			if !ok {
-				panic("unknown import path " + localImport)
+				return nil, errors.New("unknown import path " + imp.Name)
 			}
-			_, importPrefix := path.Split(importPath)
 
 			//fmt.Println("****** Type:", importPath, importPrefix + "." + t.Sel.Name)
 
-			return importPath, importPrefix + "." + t.Sel.Name
+			return TypeNamed{
+				Name: t.Sel.Name,
+				Import: importPath,
+			}, nil
+
+		case *ast.StructType:
+			return TypeNamed{
+				Name: "struct{}",
+			}, nil
 
 		default:
-			panic("unknown field type")
+			return nil, errors.New("unknown field type")
 	}
 }
 
@@ -232,8 +302,14 @@ func addImport(imports map[string]string, n *ast.ImportSpec) {
 func isBuiltInType(t string) bool {
 
 	builtInTypes := map[string]struct{}{
+		"byte": {},
 		"error": {},
+		"float32": {},
+		"float64": {},
 		"int": {},
+		"int32": {},
+		"int64": {},
+		"string": {},
 	}
 
 	_, ok := builtInTypes[t]

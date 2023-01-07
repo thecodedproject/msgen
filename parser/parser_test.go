@@ -137,7 +137,7 @@ func TestParse(t *testing.T) {
 	}
 }
 
-func TestGetPackgeContents(t *testing.T) {
+func TestGetAllProtoConversionFunctions(t *testing.T) {
 
 
 	packageDir := "example_proto/custom_conversion_1"
