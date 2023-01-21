@@ -1,6 +1,6 @@
-package gopackage
+package parse
 
-import(
+import (
 	"errors"
 	"fmt"
 	"go/parser"
@@ -8,12 +8,14 @@ import(
 	"go/ast"
 	"path"
 
+	"github.com/thecodedproject/msgen/parser/gopkg"
+
 	//"reflect"
 )
 
 const CURRENT_PKG = "current_pkg_import"
 
-func GetContents(pkgDir string, pkgImportPath string) (*Contents, error) {
+func GetContents(pkgDir string, pkgImportPath string) (*gopkg.Contents, error) {
 
 	pkgs, err := parser.ParseDir(
 		token.NewFileSet(),
@@ -40,11 +42,11 @@ func GetContents(pkgDir string, pkgImportPath string) (*Contents, error) {
 	return nil, nil
 }
 
-func parseAst(pkgImportPath string, p *ast.Package) (*Contents, error) {
+func parseAst(pkgImportPath string, p *ast.Package) (*gopkg.Contents, error) {
 
-	pc := Contents{
-		Functions: make([]Function, 0),
-		StructTypes: make([]StructDecl, 0),
+	pc := gopkg.Contents{
+		Functions: make([]gopkg.DeclFunc, 0),
+		StructTypes: make([]gopkg.DeclStruct, 0),
 	}
 
 	currentFileImports := make(map[string]string)
@@ -80,7 +82,7 @@ func parseAst(pkgImportPath string, p *ast.Package) (*Contents, error) {
 					return true
 				}
 
-				args, err := getArgTypeList(currentFileImports, n.Type.Params)
+				args, err := getDeclVarsFromFieldList(currentFileImports, n.Type.Params)
 				if err != nil {
 					inspectingErr = err
 					return false
@@ -92,7 +94,7 @@ func parseAst(pkgImportPath string, p *ast.Package) (*Contents, error) {
 					return false
 				}
 
-				f := Function{
+				f := gopkg.DeclFunc{
 					Name: n.Name.String(),
 					Import: pkgImportPath,
 					Args: args,
@@ -125,7 +127,7 @@ func parseAst(pkgImportPath string, p *ast.Package) (*Contents, error) {
 
 							pc.StructTypes = append(
 								pc.StructTypes,
-								StructDecl{
+								gopkg.DeclStruct{
 									Name: s.Name.Name,
 									Import: pkgImportPath,
 									Fields: structFields,
@@ -154,13 +156,13 @@ func parseAst(pkgImportPath string, p *ast.Package) (*Contents, error) {
 func getArgTypeList(
 	imports map[string]string,
 	fieldList *ast.FieldList,
-) ([]Type, error) {
+) ([]gopkg.Type, error) {
 
 	if fieldList == nil || fieldList.List == nil {
 		return nil, nil
 	}
 
-	typeList := make([]Type, 0, len(fieldList.List))
+	typeList := make([]gopkg.Type, 0, len(fieldList.List))
 
 	for i := range fieldList.List {
 		fieldType, err := getFullType(imports, fieldList.List[i].Type)
@@ -173,19 +175,53 @@ func getArgTypeList(
 	return typeList, nil
 }
 
+// getDeclVarsFromFieldList returns an ordered list of declared variables
+//
+// The ast field list might be, for example, the list of arguments passed into
+// a function.
+// It returns the underlying type (as `gopkg.Type`) as well as the name of the
+// declared variable.
+// Note that `gopkg.DeclVar.Import` will always be blank as the field list will
+// only contain vars declared in a local scope (i.e. not at the package level)
+func getDeclVarsFromFieldList(
+	imports map[string]string,
+	fieldList *ast.FieldList,
+) ([]gopkg.DeclVar, error) {
+
+	if fieldList == nil || fieldList.List == nil {
+		return nil, nil
+	}
+
+	typeList := make([]gopkg.DeclVar, 0, len(fieldList.List))
+
+	for i := range fieldList.List {
+		fieldType, err := getFullType(imports, fieldList.List[i].Type)
+		if err != nil {
+			return nil, err
+		}
+		typeList = append(typeList, gopkg.DeclVar{
+			Name: fieldList.List[i].Names[0].String(),
+			Type: fieldType,
+		})
+	}
+
+	return typeList, nil
+}
+
+
 // getFieldTypeList returns a map of field names and types from an `ast.FieldList`
 //
 // Used to get the list of fields and there types when pasing the ast for a struct
 func getFieldTypeList(
 	imports map[string]string,
 	fieldList *ast.FieldList,
-) (map[string]Type, error) {
+) (map[string]gopkg.Type, error) {
 
 	if fieldList == nil || fieldList.List == nil {
 		return nil, nil
 	}
 
-	fieldTypeList := make(map[string]Type)
+	fieldTypeList := make(map[string]gopkg.Type)
 
 	for i := range fieldList.List {
 		fieldType, err := getFullType(imports, fieldList.List[i].Type)
@@ -201,7 +237,7 @@ func getFieldTypeList(
 func getFullType(
 	imports map[string]string,
 	t ast.Expr,
-) (Type, error) {
+) (gopkg.Type, error) {
 
 	//fmt.Println("******", reflect.TypeOf(t))
 
@@ -214,19 +250,22 @@ func getFullType(
 			if err != nil {
 				return nil, err
 			}
-			return TypeArray{
+			return gopkg.TypeArray{
 				ValueType: fullType,
 			}, nil
 
 		case *ast.Ident:
 			if isBuiltInType(t.Name) {
-				return TypeNamed{
-					Name: t.Name,
-				}, nil
+
+				return typeFromString(t.Name), nil
+
+				//return gopkg.TypeUnknownNamed{
+				//	Name: t.Name,
+				//}, nil
 			}
 
 			importPath := imports[CURRENT_PKG]
-			return TypeNamed{
+			return gopkg.TypeUnknownNamed{
 				Name: t.Name,
 				Import: importPath,
 			}, nil
@@ -236,7 +275,7 @@ func getFullType(
 			if err != nil {
 				return nil, err
 			}
-			return TypePointer{
+			return gopkg.TypePointer{
 				ValueType: fullType,
 			}, nil
 
@@ -256,13 +295,13 @@ func getFullType(
 
 			//fmt.Println("****** Type:", importPath, importPrefix + "." + t.Sel.Name)
 
-			return TypeNamed{
+			return gopkg.TypeUnknownNamed{
 				Name: t.Sel.Name,
 				Import: importPath,
 			}, nil
 
 		case *ast.StructType:
-			return TypeNamed{
+			return gopkg.TypeUnknownNamed{
 				Name: "struct{}",
 			}, nil
 
@@ -314,4 +353,27 @@ func isBuiltInType(t string) bool {
 
 	_, ok := builtInTypes[t]
 	return ok
+}
+
+func typeFromString(t string) gopkg.Type {
+
+	switch t {
+	case "byte":
+		return gopkg.TypeByte{}
+	case "error":
+		return gopkg.TypeError{}
+	case "float32":
+		return gopkg.TypeFloat32{}
+	case "float64":
+		return gopkg.TypeFloat64{}
+	case "int":
+		return gopkg.TypeInt{}
+	case "int32":
+		return gopkg.TypeInt32{}
+	case "int64":
+		return gopkg.TypeInt64{}
+	case "string":
+		return gopkg.TypeString{}
+	}
+	return nil
 }

@@ -24,5 +24,5 @@ func SomeFloats(a float32, b float64) (float32, float64) {
 
 func SomeStrings(a string) string {
 
-	return string
+	return ""
 }
