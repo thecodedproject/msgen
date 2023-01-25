@@ -116,7 +116,7 @@ func parseAst(pkgImportPath string, p *ast.Package) (*gopkg.Contents, error) {
 
 							structSpec := s.Type.(*ast.StructType)
 
-							structFields, err := getFieldTypeList(
+							structFields, err := getDeclVarsFromFieldList(
 								currentFileImports,
 								structSpec.Fields,
 							)
@@ -301,8 +301,7 @@ func getFullType(
 			}, nil
 
 		case *ast.StructType:
-			return gopkg.TypeUnknownNamed{
-				Name: "struct{}",
+			return gopkg.TypeStruct{
 			}, nil
 
 		default:

@@ -81,13 +81,13 @@ func TestGetPackageContents(t *testing.T) {
 					{
 						Name: "SomeStruct",
 						Import: "some/import/all_built_in_types",
-						Fields: map[string]gopkg.Type{
-							"IA": gopkg.TypeInt{},
-							"IB": gopkg.TypeInt32{},
-							"IC": gopkg.TypeInt64{},
-							"FA": gopkg.TypeFloat32{},
-							"FB": gopkg.TypeFloat64{},
-							"S": gopkg.TypeString{},
+						Fields: []gopkg.DeclVar{
+							{Name: "IA", Type: gopkg.TypeInt{}},
+							{Name: "IB", Type: gopkg.TypeInt32{}},
+							{Name: "IC", Type: gopkg.TypeInt64{}},
+							{Name: "FA", Type: gopkg.TypeFloat32{}},
+							{Name: "FB", Type: gopkg.TypeFloat64{}},
+							{Name: "S", Type: gopkg.TypeString{}},
 						},
 					},
 				},
@@ -159,13 +159,19 @@ func TestGetPackageContents(t *testing.T) {
 					{
 						Name: "SomeArrayStruct",
 						Import: "some/import/composite_types",
-						Fields: map[string]gopkg.Type{
-							"AOfInts": gopkg.TypeArray{
-								ValueType: gopkg.TypeInt64{},
+						Fields: []gopkg.DeclVar{
+							{
+								Name: "AOfInts",
+								Type: gopkg.TypeArray{
+									ValueType: gopkg.TypeInt64{},
+								},
 							},
-							"AOfPToStrings": gopkg.TypeArray{
-								ValueType: gopkg.TypePointer{
-									ValueType: gopkg.TypeString{},
+							{
+								Name: "AOfPToStrings",
+								Type: gopkg.TypeArray{
+									ValueType: gopkg.TypePointer{
+										ValueType: gopkg.TypeString{},
+									},
 								},
 							},
 						},
@@ -173,9 +179,12 @@ func TestGetPackageContents(t *testing.T) {
 					{
 						Name: "SomePointerStruct",
 						Import: "some/import/composite_types",
-						Fields: map[string]gopkg.Type{
-							"PToInt": gopkg.TypePointer{
-								ValueType: gopkg.TypeInt32{},
+						Fields: []gopkg.DeclVar{
+							{
+								Name: "PToInt",
+								Type: gopkg.TypePointer{
+									ValueType: gopkg.TypeInt32{},
+								},
 							},
 						},
 					},
@@ -293,25 +302,34 @@ func TestGetPackageContents(t *testing.T) {
 					{
 						Name: "IntAsString",
 						Import: "some/import/proto_conversion",
-						Fields: map[string]gopkg.Type{
-							"Value": gopkg.TypeString{},
-							"XXX_NoUnkeyedLiteral": gopkg.TypeStruct{},
-							"XXX_unrecognized": gopkg.TypeArray{
-								ValueType: gopkg.TypeByte{},
+						Fields: []gopkg.DeclVar{
+							{Name: "Value", Type: gopkg.TypeString{}},
+							{Name: "XXX_NoUnkeyedLiteral", Type: gopkg.TypeStruct{}},
+							{
+								Name: "XXX_unrecognized",
+								Type: gopkg.TypeArray{
+									ValueType: gopkg.TypeByte{},
+								},
 							},
-							"XXX_sizecache": gopkg.TypeInt32{},
+							{Name: "XXX_sizecache", Type: gopkg.TypeInt32{}},
 						},
 					},
 					{
 						Name: "ShopspringDecimal",
 						Import: "some/import/proto_conversion",
-						Fields: map[string]gopkg.Type{
-							"Value": gopkg.TypeString{},
-							"XXX_NoUnkeyedLiteral": gopkg.TypeStruct{},
-							"XXX_unrecognized": gopkg.TypeArray{
-								ValueType: gopkg.TypeByte{},
+						Fields: []gopkg.DeclVar{
+							{Name: "Value", Type: gopkg.TypeString{}},
+							{
+								Name: "XXX_NoUnkeyedLiteral",
+								Type: gopkg.TypeStruct{},
 							},
-							"XXX_sizecache": gopkg.TypeInt32{},
+							{
+								Name: "XXX_unrecognized",
+								Type: gopkg.TypeArray{
+									ValueType: gopkg.TypeByte{},
+								},
+							},
+							{Name: "XXX_sizecache", Type: gopkg.TypeInt32{}},
 						},
 					},
 				},

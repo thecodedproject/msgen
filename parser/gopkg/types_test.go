@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
 	"github.com/thecodedproject/msgen/parser/gopkg"
 )
 
@@ -66,21 +67,8 @@ func TestTypeDefaultInit(t *testing.T) {
 			Expected: "nil",
 		},
 		{
-			Def: gopkg.TypeStruct{
-				Name: "MyStructTypeNoAlias",
-				Import: "some_import",
-			},
-			Expected: "MyStructTypeNoAlias{}",
-		},
-		{
-			Def: gopkg.TypeStruct{
-				Name: "MyStructTypeWithAlias",
-				Import: "some_import",
-			},
-			ImportAliases: map[string]string{
-				"some_import": "some_alias",
-			},
-			Expected: "some_alias.MyStructTypeWithAlias{}",
+			Def: gopkg.TypeStruct{},
+			Expected: "{}",
 		},
 		{
 			Def: gopkg.TypeArray{
@@ -121,13 +109,32 @@ func TestTypeDefaultInit(t *testing.T) {
 				Name: "MyType",
 				Import: "my/import/path",
 			},
-			ExpectedErr: errors.New("not implemented"),
+			ExpectedErr: errors.New("cannot deduce default init for named type with no value type"),
 		},
 	}
 
 	for _, test := range testCases {
 		t.Run(test.Def.FullType(nil), func(t *testing.T) {
 			actual, err := test.Def.DefaultInit(test.ImportAliases)
+
+			if test.ExpectedErr != nil {
+				require.Equal(t, test.ExpectedErr, err)
+				return
+			}
+
+			require.NoError(t, err)
+			require.Equal(t, test.Expected, actual)
+		})
+
+		t.Run(
+			"TypeUnknownNamed_with_value_type" + test.Def.FullType(nil),
+			func(t *testing.T) {
+
+			namedType := gopkg.TypeUnknownNamed{
+				ValueType: test.Def,
+			}
+
+			actual, err := namedType.DefaultInit(test.ImportAliases)
 
 			if test.ExpectedErr != nil {
 				require.Equal(t, test.ExpectedErr, err)
@@ -197,23 +204,6 @@ func TestTypeFullType(t *testing.T) {
 			Expected: "some_other_alias.MyInterfaceType",
 		},
 		{
-			Def: gopkg.TypeStruct{
-				Name: "MyType",
-				Import: "some_import",
-			},
-			Expected: "MyType",
-		},
-		{
-			Def: gopkg.TypeStruct{
-				Name: "MyType",
-				Import: "some_import",
-			},
-			ImportAliases: map[string]string{
-				"some_import": "some_alias",
-			},
-			Expected: "some_alias.MyType",
-		},
-		{
 			Def: gopkg.TypeArray{
 				ValueType: gopkg.TypeUnknownNamed{
 					Name: "SomeType",
@@ -259,6 +249,234 @@ func TestTypeFullType(t *testing.T) {
 	for _, test := range testCases {
 		t.Run(test.Expected, func(t *testing.T) {
 			require.Equal(t, test.Expected, test.Def.FullType(test.ImportAliases))
+		})
+	}
+}
+
+// TestTypeStructFullType tests the TypeStruct.FullType functionality
+// It is in it's own test fixutre as it's morecomplicated than the other
+// types
+func TestTypeStructFullType(t *testing.T) {
+
+	testCases := []struct{
+		Name string
+		Def gopkg.TypeStruct
+		ImportAliases map[string]string
+		Expected string
+	}{
+		{
+			Name: "empty struct",
+			Def: gopkg.TypeStruct{},
+			Expected: "struct {}",
+		},
+		{
+			Name: "struct with fields no import aliases",
+			Def: gopkg.TypeStruct{
+				Fields: []gopkg.DeclVar{
+					{
+						Name: "SomeValue",
+						Type: gopkg.TypeInt{},
+					},
+					{
+						Name: "SomeOtherValue",
+						Type: gopkg.TypeString{},
+					},
+				},
+			},
+			Expected:
+`struct {
+	SomeValue int
+	SomeOtherValue string
+}`,
+		},
+		{
+			Name: "struct with fields with import aliases",
+			Def: gopkg.TypeStruct{
+				Fields: []gopkg.DeclVar{
+					{
+						Name: "MyVal",
+						Type: gopkg.TypeUnknownNamed{
+							Name: "SomeImportedType",
+							Import: "github.com/myrepo",
+						},
+					},
+					{
+						Name: "MyOtherVal",
+						Type: gopkg.TypePointer{
+							ValueType: gopkg.TypeUnknownNamed{
+								Name: "SomeOtherImportedType",
+								Import: "github.com/myotherrepo",
+							},
+						},
+					},
+				},
+			},
+			ImportAliases: map[string]string{
+				"github.com/myrepo": "myrepo",
+				"github.com/myotherrepo": "myotherrepo",
+			},
+			Expected:
+`struct {
+	MyVal myrepo.SomeImportedType
+	MyOtherVal *myotherrepo.SomeOtherImportedType
+}`,
+		},
+	}
+
+	for _, test := range testCases {
+		t.Run(test.Name, func(t *testing.T) {
+			require.Equal(t, test.Expected, test.Def.FullType(test.ImportAliases))
+		})
+	}
+}
+
+func TestTypeUnknownNamedDefaultInit(t *testing.T) {
+
+	testCases := []struct{
+		// TODO add names to these tests
+		Def gopkg.TypeUnknownNamed
+		ImportAliases map[string]string
+		Expected string
+		ExpectedErr error
+	}{
+		{
+			Def: gopkg.TypeUnknownNamed{
+				Name: "SomeName",
+				ValueType: gopkg.TypeByte{},
+			},
+			Expected: "0",
+		},
+		{
+			Def: gopkg.TypeUnknownNamed{
+				Name: "SomeName",
+				ValueType: gopkg.TypeError{},
+			},
+			Expected: "nil",
+		},
+		{
+			Def: gopkg.TypeUnknownNamed{
+				Name: "SomeName",
+				ValueType: gopkg.TypeFloat32{},
+			},
+			Expected: "0",
+		},
+		{
+			Def: gopkg.TypeUnknownNamed{
+				Name: "SomeName",
+				ValueType: gopkg.TypeFloat64{},
+			},
+			Expected: "0",
+		},
+		{
+			Def: gopkg.TypeUnknownNamed{
+				Name: "SomeName",
+				ValueType: gopkg.TypeInt{},
+			},
+			Expected: "0",
+		},
+		{
+			Def: gopkg.TypeUnknownNamed{
+				Name: "SomeName",
+				ValueType: gopkg.TypeInt32{},
+			},
+			Expected: "0",
+		},
+		{
+			Def: gopkg.TypeUnknownNamed{
+				Name: "SomeName",
+				ValueType: gopkg.TypeInt64{},
+			},
+			Expected: "0",
+		},
+		{
+			Def: gopkg.TypeUnknownNamed{
+				Name: "SomeName",
+				ValueType: gopkg.TypeString{},
+			},
+			Expected: "\"\"",
+		},
+		{
+			Def: gopkg.TypeUnknownNamed{
+				Name: "SomeName",
+				ValueType: gopkg.TypeInterface{
+					Name: "MyInterfaceTypeNoAlias",
+					Import: "some_import",
+				},
+			},
+			Expected: "nil",
+		},
+		{
+			Def: gopkg.TypeUnknownNamed{
+				Name: "SomeName",
+				ValueType: gopkg.TypeInterface{
+					Name: "MyInterfaceType",
+					Import: "some/other/import",
+				},
+			},
+			ImportAliases: map[string]string{
+				"some/other/import": "some_other_alias",
+			},
+			Expected: "nil",
+		},
+		{
+			Def: gopkg.TypeUnknownNamed{
+				Name: "SomeName",
+				ValueType: gopkg.TypeStruct{},
+			},
+			Expected: "SomeName{}",
+		},
+		{
+			Def: gopkg.TypeUnknownNamed{
+				Name: "SomeOtherName",
+				Import: "github.com/somepkg",
+				ValueType: gopkg.TypeStruct{},
+			},
+			ImportAliases: map[string]string{
+				"github.com/somepkg": "somepkg",
+			},
+			Expected: "somepkg.SomeOtherName{}",
+		},
+		{
+			Def: gopkg.TypeUnknownNamed{
+				Name: "SomeType",
+				ValueType: gopkg.TypeArray{},
+			},
+			Expected: "nil",
+		},
+		{
+			Def: gopkg.TypeUnknownNamed{
+				Name: "SomeType",
+				ValueType: gopkg.TypePointer{},
+			},
+			Expected: "nil",
+		},
+		{
+			Def: gopkg.TypeUnknownNamed{
+				Name: "SomeType",
+				ValueType: gopkg.TypeMap{},
+			},
+			Expected: "nil",
+		},
+		{
+			Def: gopkg.TypeUnknownNamed{
+				Name: "MyType",
+				Import: "my/import/path",
+			},
+			ExpectedErr: errors.New("cannot deduce default init for named type with no value type"),
+		},
+	}
+
+	for _, test := range testCases {
+		t.Run(test.Def.FullType(nil), func(t *testing.T) {
+			actual, err := test.Def.DefaultInit(test.ImportAliases)
+
+			if test.ExpectedErr != nil {
+				require.Equal(t, test.ExpectedErr, err)
+				return
+			}
+
+			require.NoError(t, err)
+			require.Equal(t, test.Expected, actual)
 		})
 	}
 }

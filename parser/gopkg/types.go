@@ -125,35 +125,49 @@ func (t TypeString) FullType(importAliases map[string]string) string {
 }
 
 type TypeStruct struct {
-	Name string
-	Import string
-	// TODO add fields
+	Fields []DeclVar
 }
 
 func (t TypeStruct) DefaultInit(importAliases map[string]string) (string, error) {
-	return t.FullType(importAliases) + "{}", nil
+	return "{}", nil
 }
 
 func (t TypeStruct) FullType(importAliases map[string]string) string {
-	if alias, hasAlias := importAliases[t.Import]; hasAlias {
-		return alias + "." + t.Name
+
+	ret := "struct {"
+
+	for i, f := range t.Fields {
+		if i == 0 {
+			ret += "\n"
+		}
+		ret += "\t" + f.Name + " " + f.FullType(importAliases) + "\n"
 	}
 
-	return t.Name
+	ret += "}"
+
+	return ret
 }
 
-// TypeUnknownNamed represents a named type who exact type is unknown
-// This occurs typically when parsing a package which imports a type
-// from another package - it's not known at parsing time whether the other
-// type is a struct, interface, typedef or a variable.
+// TODO rename to something more approriate - maybe TypeNamed (or TypeAlias)
 type TypeUnknownNamed struct {
 	Name string
 	Import string
+	ValueType Type
 }
 
 func (t TypeUnknownNamed) DefaultInit(importAliases map[string]string) (string, error) {
-	// TODO return more informative error
-	return "...", errors.New("not implemented")
+
+	if t.ValueType != nil {
+
+		switch t.ValueType.(type) {
+		case TypeStruct:
+			return t.FullType(importAliases) + "{}", nil
+		default:
+			return t.ValueType.DefaultInit(importAliases)
+		}
+	}
+
+	return "", errors.New("cannot deduce default init for named type with no value type")
 }
 
 func (t TypeUnknownNamed) FullType(importAliases map[string]string) string {

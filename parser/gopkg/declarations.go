@@ -15,8 +15,13 @@ type DeclStruct struct {
 	Name string
 	Import string
 	// TODO: Maybe also add struct field descriptors
-	// TODO: Use DeclVar instead of map here
-	Fields map[string]Type
+	Fields []DeclVar//map[string]Type
+}
+
+type DeclType struct {
+	Name string
+	Import string
+	Type Type
 }
 
 type DeclVar struct {

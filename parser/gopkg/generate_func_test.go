@@ -40,14 +40,14 @@ func TestGenerateFunc(t *testing.T) {
 				Args: []gopkg.DeclVar{
 					{
 						Name: "myVar",
-						Type: gopkg.TypeStruct{
+						Type: gopkg.TypeUnknownNamed{
 							Name: "MyType",
 							Import: "/some/path/tomypkg",
 						},
 					},
 				},
 				ReturnArgs: []gopkg.Type{
-					gopkg.TypeStruct{
+					gopkg.TypeUnknownNamed{
 						Name: "OtherType",
 						Import: "github.com/otherpackage",
 					},
@@ -66,7 +66,10 @@ func TestGenerateFunc(t *testing.T) {
 					gopkg.TypeInt32{},
 					gopkg.TypeFloat64{},
 					gopkg.TypeString{},
-					gopkg.TypeStruct{Name: "MyStruct"},
+					gopkg.TypeUnknownNamed{
+						Name: "MyStruct",
+						ValueType: gopkg.TypeStruct{},
+					},
 					gopkg.TypePointer{
 						ValueType: gopkg.TypeInt32{},
 					},
@@ -84,13 +87,15 @@ func TestGenerateFunc(t *testing.T) {
 			F: gopkg.DeclFunc{
 				Name: "MyFunction",
 				ReturnArgs: []gopkg.Type{
-					gopkg.TypeStruct{
+					gopkg.TypeUnknownNamed{
 						Name: "MyStruct",
 						Import: "github.com/some/nice_package",
+						ValueType: gopkg.TypeStruct{},
 					},
-					gopkg.TypeStruct{
+					gopkg.TypeUnknownNamed{
 						Name: "OtherStruct",
 						Import: "github.com/some/other_package",
+						ValueType: gopkg.TypeStruct{},
 					},
 				},
 				BodyTmpl: `
@@ -125,7 +130,7 @@ func TestGenerateFunc(t *testing.T) {
 				},
 				ReturnArgs: []gopkg.Type{
 					gopkg.TypeInt32{},
-					gopkg.TypeStruct{
+					gopkg.TypeUnknownNamed{
 						Name: "MyStruct",
 						Import: "package/to/wrap",
 					},
