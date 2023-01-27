@@ -55,6 +55,67 @@ func TestGenerateDeclType(t *testing.T) {
 				},
 			},
 		},
+		{
+			Name: "TypeStruct with fields and import aliases",
+			T: gopkg.DeclType{
+				Name: "MyStrct",
+				Type: gopkg.TypeStruct{
+					Fields: []gopkg.DeclVar{
+						{
+							Name: "MapOfThings",
+							Type: gopkg.TypeMap{
+								KeyType: gopkg.TypeString{},
+								ValueType: gopkg.TypeUnknownNamed{
+									Name: "CustomContainer",
+									Import: "some/pkgpath",
+								},
+							},
+						},
+						{
+							Name: "OtherThing",
+							Type: gopkg.TypeUnknownNamed{
+								Name: "ThingType",
+								Import: "some/otherimport",
+							},
+						},
+					},
+				},
+			},
+			ImportAliases: map[string]string{
+				"some/otherimport": "otherimport",
+				"some/pkgpath": "pkgpath",
+			},
+		},
+		{
+			Name: "TypeMap with import aliases",
+			T: gopkg.DeclType{
+				Name: "MyCustomMap",
+				Type: gopkg.TypeMap{
+					KeyType: gopkg.TypeString{},
+					ValueType: gopkg.TypeUnknownNamed{
+						Name: "CustomContainer",
+						Import: "some/pkgpath",
+					},
+				},
+			},
+			ImportAliases: map[string]string{
+				"some/pkgpath": "pkgpath",
+			},
+		},
+		{
+			Name: "TypeInterface with no fields",
+			T: gopkg.DeclType{
+				Name: "MyServiceApi",
+				Type: gopkg.TypeInterface{},
+			},
+		},
+		{
+			Name: "TypeInterface with no fields",
+			T: gopkg.DeclType{
+				Name: "MyServiceApi",
+				Type: gopkg.TypeInterface{},
+			},
+		},
 	}
 
 	for _, test := range testCases {

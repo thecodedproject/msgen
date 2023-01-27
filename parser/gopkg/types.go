@@ -77,9 +77,7 @@ func (t TypeInt) FullType(importAliases map[string]string) string {
 }
 
 type TypeInterface struct {
-	Name string
-	Import string
-	// TODO maybe add funcs?
+	Funcs []DeclFunc
 }
 
 func (t TypeInterface) DefaultInit(importAliases map[string]string) (string, error) {
@@ -87,11 +85,18 @@ func (t TypeInterface) DefaultInit(importAliases map[string]string) (string, err
 }
 
 func (t TypeInterface) FullType(importAliases map[string]string) string {
-	if alias, hasAlias := importAliases[t.Import]; hasAlias {
-		return alias + "." + t.Name
+
+	if len(t.Funcs) == 0 {
+		return "interface{}"
 	}
 
-	return t.Name
+	ret := "interface {\n"
+	for _, f := range t.Funcs {
+		ret += "\t" + f.Name + funcArgsAndRetArgs(f, nil, false) + "\n"
+	}
+	ret += "}"
+
+	return ret
 }
 
 type TypeInt32 struct {}

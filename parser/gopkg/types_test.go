@@ -50,20 +50,7 @@ func TestTypeDefaultInit(t *testing.T) {
 			Expected: "\"\"",
 		},
 		{
-			Def: gopkg.TypeInterface{
-				Name: "MyInterfaceTypeNoAlias",
-				Import: "some_import",
-			},
-			Expected: "nil",
-		},
-		{
-			Def: gopkg.TypeInterface{
-				Name: "MyInterfaceType",
-				Import: "some/other/import",
-			},
-			ImportAliases: map[string]string{
-				"some/other/import": "some_other_alias",
-			},
+			Def: gopkg.TypeInterface{},
 			Expected: "nil",
 		},
 		{
@@ -185,23 +172,6 @@ func TestTypeFullType(t *testing.T) {
 		{
 			Def: gopkg.TypeString{},
 			Expected: "string",
-		},
-		{
-			Def: gopkg.TypeInterface{
-				Name: "MyInterfaceType",
-				Import: "some_import",
-			},
-			Expected: "MyInterfaceType",
-		},
-		{
-			Def: gopkg.TypeInterface{
-				Name: "MyInterfaceType",
-				Import: "some/other/import",
-			},
-			ImportAliases: map[string]string{
-				"some/other/import": "some_other_alias",
-			},
-			Expected: "some_other_alias.MyInterfaceType",
 		},
 		{
 			Def: gopkg.TypeArray{
@@ -330,6 +300,68 @@ func TestTypeStructFullType(t *testing.T) {
 	}
 }
 
+// TestTypeInterfaceFullType tests the TypeInterface.FullType functionality
+// It is in it's own test fixutre as it's morecomplicated than the other
+// types
+func TestTypeInterfaceFullType(t *testing.T) {
+
+	testCases := []struct{
+		Name string
+		Def gopkg.TypeInterface
+		ImportAliases map[string]string
+		Expected string
+	}{
+		{
+			Name: "empty interface",
+			Def: gopkg.TypeInterface{},
+			Expected: "interface{}",
+		},
+		{
+			Name: "with functions no import aliases",
+			Def: gopkg.TypeInterface{
+				Funcs: []gopkg.DeclFunc{
+					{
+						Name: "FirstMethod",
+						Args: []gopkg.DeclVar{
+							{
+								Name: "a",
+								Type: gopkg.TypeInt32{},
+							},
+							{
+								Name: "b",
+								Type: gopkg.TypeFloat64{},
+							},
+						},
+						ReturnArgs: []gopkg.Type{
+							gopkg.TypeString{},
+							gopkg.TypeError{},
+						},
+					},
+					{
+						Name: "SecondMethod",
+						ReturnArgs: []gopkg.Type{
+							gopkg.TypeUnknownNamed{
+								Name: "MyType",
+							},
+						},
+					},
+				},
+			},
+			Expected:
+`interface {
+	FirstMethod(a int32, b float64) (string, error)
+	SecondMethod() MyType
+}`,
+		},
+	}
+
+	for _, test := range testCases {
+		t.Run(test.Name, func(t *testing.T) {
+			require.Equal(t, test.Expected, test.Def.FullType(test.ImportAliases))
+		})
+	}
+}
+
 func TestTypeUnknownNamedDefaultInit(t *testing.T) {
 
 	testCases := []struct{
@@ -398,20 +430,15 @@ func TestTypeUnknownNamedDefaultInit(t *testing.T) {
 		{
 			Def: gopkg.TypeUnknownNamed{
 				Name: "SomeName",
-				ValueType: gopkg.TypeInterface{
-					Name: "MyInterfaceTypeNoAlias",
-					Import: "some_import",
-				},
+				ValueType: gopkg.TypeInterface{},
 			},
 			Expected: "nil",
 		},
 		{
 			Def: gopkg.TypeUnknownNamed{
-				Name: "SomeName",
-				ValueType: gopkg.TypeInterface{
-					Name: "MyInterfaceType",
-					Import: "some/other/import",
-				},
+				Name: "SomeNameWithImport",
+				Import: "some/other/import",
+				ValueType: gopkg.TypeInterface{},
 			},
 			ImportAliases: map[string]string{
 				"some/other/import": "some_other_alias",

@@ -18,7 +18,9 @@ func GenerateDeclType(
 		return errors.New("type decl type cannot be nil")
 	}
 
-	w.Write([]byte("type MyStrct struct {}\n"))
+	w.Write([]byte(
+		"type " + decl.Name + " " + decl.Type.FullType(importAliases) + "\n",
+	))
 
 	return nil
 }

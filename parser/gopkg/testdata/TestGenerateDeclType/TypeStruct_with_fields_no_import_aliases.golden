@@ -1,4 +1,4 @@
 type MyStrct struct {
-  SomeValue int
-  SomeOtherValue float64
+	SomeValue int
+	SomeOtherValue float64
 }

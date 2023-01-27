@@ -32,14 +32,44 @@ type DeclVar struct {
 
 func (f DeclFunc) FullDecl(importAliases map[string]string) string {
 
-	decl := "func " + f.Name + "("
+	return "func " + f.Name + funcArgsAndRetArgs(f, importAliases, true)
+}
 
-	if len(f.Args) == 1 {
-		decl += f.Args[0].Name + " " + f.Args[0].FullType(importAliases)
-	} else if len(f.Args) > 1 {
+// funcArgsAndRetArgs is a helper function which returns a function signature
+// (i.e. argument list and return argment list) without the `func` specifier or
+// function name.
+//
+// `addNewLinesToArgsList` will new-line seperate the arguments list (iff there
+// is more than 1 argument in the args list)
+func funcArgsAndRetArgs(
+	f DeclFunc,
+	importAliases map[string]string,
+	addNewLinesToArgsList bool,
+) string {
+
+	decl := "("
+
+	// Don't add new lines to arg list if there are 0 args or only 1 arg
+	if len(f.Args) < 2 {
+		addNewLinesToArgsList = false
+	}
+
+	if addNewLinesToArgsList {
 		decl += "\n"
-		for _, arg := range f.Args {
-			decl += "\t" +  arg.Name + " " + arg.FullType(importAliases) + ",\n"
+	}
+
+	for iArg, arg := range f.Args {
+
+		if addNewLinesToArgsList {
+			decl += "\t"
+		}
+
+		decl += arg.Name + " " + arg.FullType(importAliases)
+
+		if addNewLinesToArgsList {
+			decl += ",\n"
+		} else if iArg < len(f.Args)-1 {
+			decl += ", "
 		}
 	}
 
